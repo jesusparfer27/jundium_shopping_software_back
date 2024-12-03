@@ -12,7 +12,7 @@ if (result.error) {
 export const HOST = process.env.HOST || "http://localhost";
 export const PORT = process.env.PORT || 3027;
 
-export const FULL_DOMAIN_1 = process.env.FULL_DOMAIN_1
+export const FULL_DOMAIN_1 = process.env.FULL_DOMAIN_1 || 'http://localhost:3027';
 
 export const FULL_DOMAIN = `${HOST}:${PORT}`
 
