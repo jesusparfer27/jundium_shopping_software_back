@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { mongodbUri } from '../config/mongo.config.js';
 import { type } from 'os';
- 
+  
 // Conexión a MongoDB 
 const connectDB = async () => {
     try {
