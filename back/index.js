@@ -1,6 +1,6 @@
 import express from 'express'
 import cors from 'cors'
-import { HOST, PORT, JWT_SECRET, __dirname } from './config/mongo.config.js'
+import { HOST, PORT, JWT_SECRET, __dirname, FULL_DOMAIN_1 } from './config/mongo.config.js'
 import mongoRoutes from './routes/mongodb.routes.js'
 import path from 'path'
 
@@ -26,7 +26,7 @@ app.get('/', (req, res) => {
 
     const landingHTML = `
         <h1>Bienvenidos a nuestra REST-API</h1>
-        <p>Servidor uniciado en ${HOST};${PORT}</p>
+        <p>Servidor uniciado en ${FULL_DOMAIN_1}</p>
     `;
 
     res.status(200).send(landingHTML)
@@ -40,5 +40,5 @@ app.use('/API/v1', mongoRoutes)
 
 // Rutas
 app.listen(PORT, () => {
-    console.log(`Iniciando API en ${HOST}:${PORT}`)
+    console.log(`Iniciando API en ${FULL_DOMAIN_1}`)
 })
