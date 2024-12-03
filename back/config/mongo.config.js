@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 export const __dirname = path.resolve()
 
-const result = dotenv.config();
+const result = dotenv.config(); 
 if (result.error) {
     throw new Error("Error al cargar las variables de entorno: " + result.error);
 }
