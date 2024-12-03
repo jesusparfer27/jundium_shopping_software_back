@@ -9,12 +9,7 @@ if (result.error) {
     throw new Error("Error al cargar las variables de entorno: " + result.error);
 }
 
-export const HOST = process.env.HOST || "http://localhost";
-export const PORT = process.env.PORT || 3027;
-
 export const FULL_DOMAIN_1 = process.env.FULL_DOMAIN_1 || 'http://localhost:3027';
-
-export const FULL_DOMAIN = `${HOST}:${PORT}`
 
 export const JWT_SECRET = process.env.JWT_SECRET || 'S4jIRHqt'
 
