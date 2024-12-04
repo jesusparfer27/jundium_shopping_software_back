@@ -6,7 +6,7 @@ export const __dirname = path.resolve()
 
 dotenv.config();
 
-export const FULL_DOMAIN_1 = process.env.FULL_DOMAIN_1 || 'http://localhost:3027';
+export const FULL_DOMAIN_1 = process.env.FULL_DOMAIN_1 || 'http://localhost:3027/API/v1';
 
 export const PORT = process.env.PORT || 3027
 
