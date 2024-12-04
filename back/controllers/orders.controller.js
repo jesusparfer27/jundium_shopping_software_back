@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 import { authenticateToken } from '../middlewares/auth.js';
 
 // Conectar a la base de datos
-connectDB();
+connectDB(); 
 
 const createOrder = async (req, res) => {
     const userId = req.user.id;
