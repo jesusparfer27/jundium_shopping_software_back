@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true }))
 // rutas
 // Solución para __dirname
 const __dirname = path.resolve();
-app.use(express.static(path.join(__dirname, "public")))
+app.use(express.static(path.join(__dirname, "/public")))
 
 
 app.get('/', (req, res) => {
