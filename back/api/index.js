@@ -30,4 +30,8 @@ app.get('/', (req, res) => {
 // Rutas para MongoDB
 app.use('/API/v1', mongoRoutes);
 
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+
 export default app;
