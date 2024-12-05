@@ -35,7 +35,7 @@ app.get('/', (req, res) => {
 // app.use("/API/v1/", apiRoutes)
 
 // Rutas para mongoDB
-app.use('/API/v1/', mongoRoutes)
+app.use('/API/v1', mongoRoutes)
 
 // Rutas
 app.listen(PORT, () => {
