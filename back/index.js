@@ -8,14 +8,14 @@ import path from 'path'
 // Utilities
 const app = express()
 
-  
-
 // Middlewares
 
 app.use(cors());
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
-app.use('/images', express.static(path.join(__dirname, "assets/images")))
+
+export const __dirname = path.resolve()
+app.use(express.static(path.join(__dirname, "public")))
 
 // rutas
 
