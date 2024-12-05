@@ -1,8 +1,5 @@
 import dotenv from 'dotenv';
 
-// Creación de variable __dirname para usar carpeta public con vercel
-
-
 dotenv.config();
 
 export const FULL_DOMAIN_1 = process.env.FULL_DOMAIN_1 || 'http://localhost:3027';

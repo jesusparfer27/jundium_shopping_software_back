@@ -1,6 +1,6 @@
 import express from 'express'
 import cors from 'cors'
-import { PORT, JWT_SECRET, __dirname, FULL_DOMAIN_1 } from './config/mongo.config.js'
+import { PORT, JWT_SECRET, FULL_DOMAIN_1 } from './config/mongo.config.js'
 import mongoRoutes from './routes/mongodb.routes.js'
 import path from 'path'
 
