@@ -4,7 +4,6 @@ import { PORT, JWT_SECRET, FULL_DOMAIN_1 } from './config/mongo.config.js'
 import mongoRoutes from './routes/mongodb.routes.js'
 import path from 'path'
 
-
 // Utilities
 const app = express()
 
@@ -14,10 +13,10 @@ app.use(cors());
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-export const __dirname = path.resolve()
-app.use(express.static(path.join(__dirname, "public")))
-
 // rutas
+// Solución para __dirname
+const __dirname = path.resolve();
+app.use(express.static(path.join(__dirname, "public")))
 
 
 app.get('/', (req, res) => {
