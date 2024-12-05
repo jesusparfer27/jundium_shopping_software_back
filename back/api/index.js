@@ -5,11 +5,11 @@ import mongoRoutes from '../routes/mongodb.routes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+const app = express();
+
 // Obtener __dirname para ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-const app = express();
 
 // Middlewares
 app.use(cors());
