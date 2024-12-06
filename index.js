@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import { PORT, FULL_DOMAIN_1 } from '../config/mongo.config.js';
-import mongoRoutes from '../routes/mongodb.routes.js';
+import { PORT, FULL_DOMAIN_1 } from './config/mongo.config.js';
+import mongoRoutes from './routes/mongodb.routes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
