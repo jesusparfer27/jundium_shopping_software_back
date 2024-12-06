@@ -4,6 +4,6 @@
   "routes": [
     { "handle": "filesystem" },
     { "src": "/images/(.*)", "dest": "/public/images/$1" },
-    { "src": "/(.*)", "dest": "/api/index.js" }
+    { "src": "/(.*)", "dest": "/index.js" }
   ]
 }
