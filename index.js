@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Rutas estáticas para imágenes
-app.use('/images', express.static(path.join(__dirname, './public/images')));
+app.use('/images', express.static(path.join(__dirname, '/public/images')));
 
 app.get('/', (req, res) => {
   res.setHeader('Content-Type', 'text/html');
