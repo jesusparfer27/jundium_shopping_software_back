@@ -31,7 +31,7 @@ export const getProductById = async (req, res) => {
 // Obtener todos los productos con filtros
 const getProducts = async (req, res) => {
     try {
-        const { type, color, size, discount, product_code, gender, collection, base_price } = req.query; // Obtener filtros desde la query
+        const { type, color, size, discount, product_code, gender, collection, price } = req.query; // Obtener filtros desde la query
         const filters = {};
 
         // Aplicar filtros
@@ -43,18 +43,18 @@ const getProducts = async (req, res) => {
         if (gender) filters.gender = gender;
         if (collection) filters.collection = collection;
 
-        // Filtro por base_price
-        if (base_price) {
-            const priceRange = base_price.split('-');
+        // Filtro por price
+        if (price) {
+            const priceRange = price.split('-');
             if (priceRange.length === 2) {
                 // Si se proporciona un rango de precios, aplicar $gte y $lte
                 const minPrice = parseFloat(priceRange[0]);
                 const maxPrice = parseFloat(priceRange[1]);
-                filters.base_price = { $gte: minPrice, $lte: maxPrice };
+                filters.price = { $gte: minPrice, $lte: maxPrice };
             } else {
                 // Si solo se proporciona un precio específico, aplicar $eq
-                const price = parseFloat(base_price);
-                filters.base_price = price;
+                const price = parseFloat(price);
+                filters.price = price;
             }
         }
 

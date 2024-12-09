@@ -245,7 +245,7 @@ const productSchema = new mongoose.Schema({
                 type: String,
                 required: true
             },
-            base_price: {
+            price: {
                 type: Number,
                 required: true
             },
