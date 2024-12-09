@@ -1,12 +1,12 @@
 import mongoose from 'mongoose';
 import { mongodbUri } from '../config/mongo.config.js';
 import { type } from 'os';
-  
+
 // Conexión a MongoDB 
 const connectDB = async () => {
     try {
         await mongoose.connect(mongodbUri, {
-            useNewUrlParser: true, 
+            useNewUrlParser: true,
             useUnifiedTopology: true
         });
         console.log("MongoDB conectado correctamente");
@@ -49,7 +49,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['masculino', 'femenino', 'otro'],
         required: true,
-        set: function(value) {
+        set: function (value) {
             return value.toLowerCase(); // Convertir a minúsculas antes de guardarlo
         }
     },
@@ -225,10 +225,18 @@ const productSchema = new mongoose.Schema({
                     type: String
                 }
             },
-            size: {
-                type: [String],
-                required: true
-            },
+            sizes: [
+                {
+                    size: {
+                        type: String,
+                        required: true
+                    },
+                    stock: {
+                        type: Number,
+                        required: true
+                    }
+                }
+            ],
             material: {
                 type: String,
                 required: true

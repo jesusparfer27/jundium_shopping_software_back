@@ -37,7 +37,7 @@ const getProducts = async (req, res) => {
         // Aplicar filtros
         if (type) filters.type = type;
         if (color) filters['variants.color.colorName'] = color;
-        if (size) filters['variants.size'] = size;
+        if (size) filters['variants.sizes.size'] = size;
         if (discount) filters.discount = { $gt: discount };
         if (product_code) filters.product_code = product_code;
         if (gender) filters.gender = gender;
