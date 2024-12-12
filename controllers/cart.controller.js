@@ -5,56 +5,52 @@ import { Cart, Product } from '../data/mongodb.js';
 connectDB();
 
 export const addToCart = async (req, res) => {
-    const { user_id, product_id, variant_id, quantity } = req.body;
-    
-    console.log("Valor de product_id recibido:", product_id);
-    console.log("Valor de variant_id recibido:", variant_id);
-
+    const { user_id, product_id, variant_id, quantity, colorName, size } = req.body;
+  
+    console.log("Valores recibidos:", { user_id, product_id, variant_id, quantity, colorName, size });
+  
     try {
-        // Validar los campos necesarios
-        if (!user_id || !product_id || !variant_id || !quantity) {
-            return res.status(400).json({ message: "Todos los campos son requeridos." });
-        }
-
-        console.log("product_id:", product_id, "variant_id:", variant_id); // Asegúrate de que estos valores se imprimen correctamente
-        // Verificar si el producto existe
-        const product = await Product.findById(product_id);
-        if (!product) {
-            return res.status(404).json({ message: "Producto no encontrado." });
-        }
-
-        // Verificar si el usuario tiene un carrito existente
-        let cart = await Cart.findOne({ user_id });
-        if (!cart) {
-            // Si no existe un carrito, se crea uno nuevo
-            cart = new Cart({
-                user_id,
-                items: []
-            });
-        }
-
-        // Verificar si el producto ya está en el carrito
-        const existingItemIndex = cart.items.findIndex(item => 
-            item.product_id.toString() === product_id && item.variant_id.toString() === variant_id
-        );
-
-        if (existingItemIndex > -1) {
-            // Si el producto ya existe en el carrito, se actualiza la cantidad
-            cart.items[existingItemIndex].quantity += quantity;
-        } else {
-            // Si el producto no está en el carrito, se añade como nuevo
-            cart.items.push({ product_id, variant_id, quantity });
-        }
-
-        // Guardar los cambios en el carrito
-        await cart.save();
-        return res.status(200).json({ message: "Producto añadido al carrito correctamente.", cart });
+      if (!user_id || !product_id || !variant_id || !quantity) {
+        return res.status(400).json({ message: "Todos los campos son requeridos." });
+      }
+  
+      const product = await Product.findById(product_id);
+      if (!product) {
+        return res.status(404).json({ message: "Producto no encontrado." });
+      }
+  
+      let cart = await Cart.findOne({ user_id });
+      if (!cart) {
+        cart = new Cart({
+          user_id,
+          items: []
+        });
+      }
+  
+      const existingItemIndex = cart.items.findIndex(item =>
+        item.product_id.toString() === product_id && item.variant_id.toString() === variant_id
+      );
+  
+      if (existingItemIndex > -1) {
+        cart.items[existingItemIndex].quantity += quantity;
+      } else {
+        cart.items.push({
+          product_id,
+          variant_id,
+          quantity,
+          colorName, // Guardar color
+          size, // Guardar tamaño
+        });
+      }
+  
+      await cart.save();
+      return res.status(200).json({ message: "Producto añadido al carrito correctamente.", cart });
     } catch (error) {
-        console.error("Error añadiendo al carrito: ", error);
-        return res.status(500).json({ message: "Error añadiendo al carrito: " + error.message });
+      console.error("Error añadiendo al carrito: ", error);
+      return res.status(500).json({ message: "Error añadiendo al carrito: " + error.message });
     }
-};
-
+  };
+  
 export const removeFromCart = async (req, res) => {
     const { productId, variantId } = req.params; // Cambié req.body a req.params
     const userId = req.user.id;

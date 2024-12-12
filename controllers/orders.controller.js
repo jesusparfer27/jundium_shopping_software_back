@@ -8,18 +8,26 @@ connectDB();
 
 const createOrder = async (req, res) => {
     const userId = req.user.id;
-    const { items, total } = req.body;
+    const { items, total, payment_methods } = req.body;
 
     try {
-        const newOrder = new Order({
+        // Validar que los items tengan todos los campos necesarios
+        if (!items || items.length === 0) {
+            return res.status(400).json({ message: 'El pedido debe incluir al menos un artículo.' });
+        }
+
+        // Crear la nueva orden directamente
+        await Order.create({
             user_id: userId,
             items,
-            total
+            total,
+            payment_methods
         });
-        await newOrder.save();
-        res.status(201).json({ message: 'Pedido creado', newOrder });
+
+        // Responder con un mensaje de éxito
+        res.status(201).json({ message: 'Pedido creado exitosamente.' });
     } catch (error) {
-        res.status(500).json({ message: 'Error creando el pedido', error });
+        res.status(500).json({ message: 'Error creando el pedido', error: error.message });
     }
 };
 
