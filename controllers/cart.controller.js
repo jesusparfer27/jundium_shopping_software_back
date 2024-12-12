@@ -5,51 +5,53 @@ import { Cart, Product } from '../data/mongodb.js';
 connectDB();
 
 export const addToCart = async (req, res) => {
-    const { user_id, product_id, variant_id, quantity, colorName, size } = req.body;
-  
-    console.log("Valores recibidos:", { user_id, product_id, variant_id, quantity, colorName, size });
-  
-    try {
-      if (!user_id || !product_id || !variant_id || !quantity) {
-        return res.status(400).json({ message: "Todos los campos son requeridos." });
+  const { user_id, product_id, variant_id, quantity, colorName, size } = req.body;
+
+  console.log("Valores recibidos:", { user_id, product_id, variant_id, quantity, colorName, size });
+
+  try {
+      if (!user_id || !product_id || !variant_id || !quantity || !size) {
+          return res.status(400).json({ message: "Todos los campos son requeridos." });
       }
-  
-      const product = await Product.findById(product_id);
-      if (!product) {
-        return res.status(404).json({ message: "Producto no encontrado." });
-      }
-  
-      let cart = await Cart.findOne({ user_id });
-      if (!cart) {
-        cart = new Cart({
+
+      // Verifica si el producto ya existe en el carrito del usuario con la misma variante y talla
+      const existingCartItem = await Cart.findOne({
           user_id,
-          items: []
-        });
-      }
-  
-      const existingItemIndex = cart.items.findIndex(item =>
-        item.product_id.toString() === product_id && item.variant_id.toString() === variant_id
-      );
-  
-      if (existingItemIndex > -1) {
-        cart.items[existingItemIndex].quantity += quantity;
-      } else {
-        cart.items.push({
           product_id,
           variant_id,
-          quantity,
-          colorName, // Guardar color
-          size, // Guardar tamaño
-        });
+          size, // Diferenciar por talla
+      });
+
+      if (existingCartItem) {
+          // Si ya existe, incrementar la cantidad
+          existingCartItem.quantity += quantity;
+          await existingCartItem.save();
+          return res.status(200).json({
+              message: "Producto actualizado en el carrito.",
+              cartItem: existingCartItem,
+          });
+      } else {
+          // Si no existe, crear una nueva entrada en el carrito
+          const newCartItem = new Cart({
+              user_id,
+              product_id,
+              variant_id,
+              colorName,
+              size,
+              quantity,
+          });
+
+          await newCartItem.save();
+          return res.status(201).json({
+              message: "Producto añadido al carrito.",
+              cartItem: newCartItem,
+          });
       }
-  
-      await cart.save();
-      return res.status(200).json({ message: "Producto añadido al carrito correctamente.", cart });
-    } catch (error) {
-      console.error("Error añadiendo al carrito: ", error);
-      return res.status(500).json({ message: "Error añadiendo al carrito: " + error.message });
-    }
-  };
+  } catch (error) {
+      console.error("Error al añadir al carrito:", error);
+      return res.status(500).json({ message: "Error interno del servidor." });
+  }
+};
   
 export const removeFromCart = async (req, res) => {
     const { productId, variantId } = req.params; // Cambié req.body a req.params
