@@ -1,60 +1,84 @@
 import { connectDB } from '../data/mongodb.js';
 import { Cart, Product } from '../data/mongodb.js';
 
-// Conectar a la base de datos
 connectDB();
 
 export const addToCart = async (req, res) => {
-  const { user_id, product_id, variant_id, quantity, colorName, size } = req.body;
+    const { user_id, product_id, variant_id, quantity, colorName, size, price } = req.body;
 
-  console.log("Valores recibidos:", { user_id, product_id, variant_id, quantity, colorName, size });
+    console.log("Valores recibidos:", { user_id, product_id, variant_id, quantity, colorName, size, price });
 
-  try {
-      if (!user_id || !product_id || !variant_id || !quantity || !size) {
-          return res.status(400).json({ message: "Todos los campos son requeridos." });
-      }
+    try {
+        if (!user_id || !product_id || !variant_id || !quantity || !size || !price) {
+            return res.status(400).json({ message: "Todos los campos son requeridos." });
+        }
 
-      // Verifica si el producto ya existe en el carrito del usuario con la misma variante y talla
-      const existingCartItem = await Cart.findOne({
-          user_id,
-          product_id,
-          variant_id,
-          size, // Diferenciar por talla
-      });
+        const product = await Product.findById(product_id);
+        if (!product) {
+            return res.status(404).json({ message: "Producto no encontrado." });
+        }
 
-      if (existingCartItem) {
-          // Si ya existe, incrementar la cantidad
-          existingCartItem.quantity += quantity;
-          await existingCartItem.save();
-          return res.status(200).json({
-              message: "Producto actualizado en el carrito.",
-              cartItem: existingCartItem,
-          });
-      } else {
-          // Si no existe, crear una nueva entrada en el carrito
-          const newCartItem = new Cart({
-              user_id,
-              product_id,
-              variant_id,
-              colorName,
-              size,
-              quantity,
-          });
+        console.log("Precio del producto:", price);
 
-          await newCartItem.save();
-          return res.status(201).json({
-              message: "Producto añadido al carrito.",
-              cartItem: newCartItem,
-          });
-      }
-  } catch (error) {
-      console.error("Error al añadir al carrito:", error);
-      return res.status(500).json({ message: "Error interno del servidor." });
-  }
+        let cart = await Cart.findOne({ user_id });
+
+        if (cart) {
+            const existingCartItemIndex = cart.items.findIndex(
+                (item) =>
+                    item.product_id.toString() === product_id &&
+                    item.variant_id.toString() === variant_id &&
+                    item.size === size 
+            );
+
+            if (existingCartItemIndex !== -1) {
+                cart.items[existingCartItemIndex].quantity += quantity;
+            } else {
+                cart.items.push({
+                    product_id,
+                    variant_id,
+                    quantity,
+                    colorName,
+                    size,
+                    price,
+                });
+            }
+        } else {
+            cart = new Cart({
+                user_id,
+                items: [
+                    {
+                        product_id,
+                        variant_id,
+                        quantity,
+                        colorName,
+                        size,
+                        price,
+                    },
+                ],
+            });
+        }
+
+        cart.total_price = cart.items.reduce(
+            (total, item) => total + item.price * item.quantity,
+            0
+        );
+
+        await cart.save();
+
+        return res.status(200).json({
+            message: cart.items.length === 1 ? "Carrito creado y producto agregado." : "Producto añadido al carrito.",
+            cartItem: cart.items,
+            total_price: cart.total_price,
+        });
+    } catch (error) {
+        console.error("Error al añadir al carrito:", error);
+        return res.status(500).json({ message: "Error interno del servidor." });
+    }
 };
   
+  
 export const removeFromCart = async (req, res) => {
-    const { productId, variantId } = req.params; // Cambié req.body a req.params
+    const { productId, variantId } = req.params; 
     const userId = req.user.id;
 
     try {
@@ -63,7 +87,6 @@ export const removeFromCart = async (req, res) => {
             return res.status(404).json({ message: 'Carrito no encontrado' });
         }
 
-        // Encontrar el índice del producto en el carrito
         const itemIndex = cart.items.findIndex(
             item => item.product_id.toString() === productId && item.variant_id.toString() === variantId
         );
@@ -73,11 +96,10 @@ export const removeFromCart = async (req, res) => {
             return res.status(404).json({ message: 'Producto no encontrado en el carrito' });
         }
 
-        // Reducir la cantidad del producto en uno
         if (cart.items[itemIndex].quantity > 1) {
             cart.items[itemIndex].quantity -= 1;
         } else {
-            // Si la cantidad es 1, eliminar el producto del carrito
+            
             cart.items.splice(itemIndex, 1);
         }
 
@@ -128,5 +150,27 @@ export const getCart = async (req, res) => {
     } catch (error) {
         console.error('Error al obtener el carrito:', error);
         return res.status(500).json({ message: "Error al obtener el carrito" });
+    }
+};
+
+export const updateCartQuantity = async (req, res) => {
+    const { productId, variantId, quantity } = req.body;
+    const userId = req.user.id; // Obtener el ID del usuario autenticado
+
+    try {
+        const cartItem = await Cart.findOneAndUpdate(
+            { userId, 'items.product_id': productId, 'items.variant_id': variantId },
+            { $set: { 'items.$.quantity': quantity } },
+            { new: true }
+        );
+
+        if (!cartItem) {
+            return res.status(404).json({ message: 'Producto no encontrado en el carrito.' });
+        }
+
+        res.json(cartItem);
+    } catch (error) {
+        console.error('Error al actualizar la cantidad del carrito:', error);
+        res.status(500).json({ message: 'Error al actualizar la cantidad del carrito.' });
     }
 };

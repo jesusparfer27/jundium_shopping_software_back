@@ -2,7 +2,7 @@ import { Router } from 'express';
 import getProducts, { getProductById } from "../controllers/product.controller.js";
 import { getUsers, loginUser, getUserById, getMe, updateUserById, subscribeNewsletter } from '../controllers/users.controller.js';
 import { authenticateToken } from '../middlewares/auth.js';
-import { addToWishlist, getWishlist, removeFromWishlist } from '../controllers/wishlist.controller.js';
+import { addToWishlist, getWishlist, removeFromWishlist, createWishlist } from '../controllers/wishlist.controller.js';
 import { adminUser, verifyAdmin } from '../controllers/admin.controller.js';
 import { upload } from '../middlewares/multer.js';  // Importar el middleware de multer
 import { createProduct } from '../controllers/create.products.controller.js';
@@ -12,7 +12,8 @@ import {
     addToCart,
     getCart,
     removeFromCart,
-    updateCartItem
+    updateCartItem,
+    updateCartQuantity
 } from '../controllers/cart.controller.js';
 import {
     createOrder,
@@ -45,6 +46,8 @@ router.post("/cart", authenticateToken, addToCart); // Añadir producto al carri
 router.get("/cart", authenticateToken, getCart); // Obtener carrito del usuario
 router.delete("/cart/:productId/:variantId", authenticateToken, removeFromCart); // Eliminar producto del carrito
 router.put("/cart", authenticateToken, updateCartItem); // Actualizar cantidad de producto en el carrito
+router.put("/cart", authenticateToken, updateCartQuantity);
+
 
 // Rutas para pedidos
 router.post("/orders", authenticateToken, createOrder); // Crear nuevo pedido
@@ -55,6 +58,8 @@ router.put("/orders/status", authenticateToken, updateOrderStatus); // Actualiza
 router.post("/wishlist", authenticateToken, addToWishlist); // Agregar producto a la wishlist
 router.get("/wishlist", authenticateToken, getWishlist); // Obtener wishlist del usuario
 router.delete("/wishlist/:productId/:variantId", authenticateToken, removeFromWishlist); // Eliminar producto de la wishlist con IDs en el cuerpo
+router.post('/wishlist', authenticateToken, createWishlist);
+
 
 // Si decides implementar filtros más adelante, podrías hacerlo así:
 router.get("/products/filter", getProducts); // Ruta para filtros específicos

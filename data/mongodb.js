@@ -86,10 +86,6 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Cart'
     },
-    newsletter_subscription: {
-        type: Boolean,
-        default: false
-    },
     contact_preferences: {
         email: {
             type: Boolean,
@@ -273,19 +269,17 @@ const productSchema = new mongoose.Schema({
     strict: false
 });
 
-
-// Schema de Wishlist
 const wishlistSchema = new mongoose.Schema({
     user_id: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // Asegúrate de que ref sea correcto
+        ref: 'User',
         required: true
     },
     items: [
         {
             product_id: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Product', // Asegúrate de que ref sea correcto
+                ref: 'Product',
                 required: true
             },
             variant_id: {
@@ -304,9 +298,6 @@ const wishlistSchema = new mongoose.Schema({
 });
 
 
-
-
-// Schema de Cart
 const cartSchema = new mongoose.Schema({
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
@@ -336,7 +327,11 @@ const cartSchema = new mongoose.Schema({
         size: { // Nuevo campo
           type: String,
           required: false
-        }
+        },
+        price: { // Nuevo campo para almacenar el precio
+            type: Number,
+            required: true
+          }
       }
     ],
     total_price: {
