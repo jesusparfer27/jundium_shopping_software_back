@@ -2,7 +2,6 @@ import mongoose from 'mongoose';
 import { mongodbUri } from '../config/mongo.config.js';
 import { type } from 'os';
 
-// Conexión a MongoDB 
 const connectDB = async () => {
     try {
         await mongoose.connect(mongodbUri, {
@@ -16,7 +15,6 @@ const connectDB = async () => {
     }
 };
 
-// Schema de Usuario
 const userSchema = new mongoose.Schema({
     first_name: {
         type: String,
@@ -36,7 +34,7 @@ const userSchema = new mongoose.Schema({
         unique: true,
         validate: {
             validator: function (v) {
-                return /^\S+@\S+\.\S+$/.test(v); // Validación simple de email
+                return /^\S+@\S+\.\S+$/.test(v);
             },
             message: props => `${props.value} no es un correo válido!`
         }
@@ -50,7 +48,7 @@ const userSchema = new mongoose.Schema({
         enum: ['masculino', 'femenino', 'otro'],
         required: true,
         set: function (value) {
-            return value.toLowerCase(); // Convertir a minúsculas antes de guardarlo
+            return value.toLowerCase();
         }
     },
     birth_date: {
@@ -111,7 +109,7 @@ const userSchema = new mongoose.Schema({
     },
     country: {
         type: String,
-        enum: ['México', 'Argentina', 'Colombia', 'Chile', 'Perú', 'España'], // Actualizar según países válidos
+        enum: ['México', 'Argentina', 'Colombia', 'Chile', 'Perú', 'España'],
     },
     location: {
         city: {
@@ -136,7 +134,7 @@ const userSchema = new mongoose.Schema({
 const supportEmailSchema = new mongoose.Schema({
     user_id: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // Referencia al esquema de usuarios
+        ref: 'User',
         required: true
     },
     first_name: {
@@ -148,7 +146,7 @@ const supportEmailSchema = new mongoose.Schema({
         required: true,
         validate: {
             validator: function (v) {
-                return /^\S+@\S+\.\S+$/.test(v); // Validación simple de email
+                return /^\S+@\S+\.\S+$/.test(v);
             },
             message: props => `${props.value} no es un correo válido!`
         }
@@ -159,14 +157,13 @@ const supportEmailSchema = new mongoose.Schema({
     },
     sent_date: {
         type: Date,
-        default: Date.now // Fecha actual por defecto
+        default: Date.now
     }
 }, {
     timestamps: true,
     versionKey: false
 });
 
-// Schema de Producto
 const productSchema = new mongoose.Schema({
     collection: {
         type: String,
@@ -187,7 +184,7 @@ const productSchema = new mongoose.Schema({
     },
     variants: [
         {
-            _id: { type: mongoose.Schema.Types.ObjectId, auto: false },  // No auto-generar _id
+            _id: { type: mongoose.Schema.Types.ObjectId, auto: false },
             variant_id: {
                 type: mongoose.Schema.Types.ObjectId,
                 required: true
@@ -320,15 +317,15 @@ const cartSchema = new mongoose.Schema({
           required: true,
           default: 1
         },
-        colorName: { // Nuevo campo
+        colorName: {
           type: String,
           required: false
         },
-        size: { // Nuevo campo
+        size: {
           type: String,
           required: false
         },
-        price: { // Nuevo campo para almacenar el precio
+        price: {
             type: Number,
             required: true
           }

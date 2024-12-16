@@ -155,7 +155,7 @@ export const getCart = async (req, res) => {
 
 export const updateCartQuantity = async (req, res) => {
     const { productId, variantId, quantity } = req.body;
-    const userId = req.user.id; // Obtener el ID del usuario autenticado
+    const userId = req.user.id;
 
     try {
         const cartItem = await Cart.findOneAndUpdate(
