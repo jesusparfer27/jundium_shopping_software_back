@@ -39,17 +39,16 @@ export const createProduct = async (req, res) => {
 
             return {
                 ...variant,
-                variant_id: variantId,  // Asignar el nuevo ID único
+                variant_id: variantId,
                 product_code: productCode,
                 sizes: variant.sizes || [],
             };
         }));
 
-        // Aquí debes agregar la lógica para guardar las imágenes en el producto
         const product = new Product({
             ...generalProduct,
             variants: updatedVariants,
-            images: req.files ? req.files.map(file => file.path) : [],  // Guardar las imágenes subidas
+            images: req.files ? req.files.map(file => file.path) : [],
         });
 
         await product.save();
@@ -61,22 +60,23 @@ export const createProduct = async (req, res) => {
     }
 };
 
+export const uploadImages = (req, res) => {
+    try {
+        console.log('Contenido de la solicitud:', req.body);
+        console.log('Archivos recibidos:', req.files);
 
-// export const createProduct = async (req, res) => {
-//     try {
-//         const generalProduct = JSON.parse(req.body.generalProduct || "{}");
-//         const variants = JSON.parse(req.body.variants || "[]");
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({ message: 'No se han subido imágenes.' });
+        }
 
-//         if (!generalProduct || !variants.length) {
-//             return res.status(400).json({ message: "Faltan datos requeridos." });
-//         }
+        res.status(200).json({
+            message: 'Imágenes subidas correctamente.',
+            imagePaths: req.files.map(f => f.path),
+        });
+    } catch (err) {
+        console.error('Error al subir imágenes:', err);
+        res.status(500).json({ error: 'Error al subir imágenes.' });
+    }
+};
 
-//         console.log("Datos recibidos:", generalProduct, variants);
-
-//         res.status(201).json({ message: "Producto creado con éxito." });
-//     } catch (error) {
-//         console.error("Error al crear el producto:", error);
-//         res.status(500).json({ message: "Error al crear el producto." });
-//     }
-// };
 

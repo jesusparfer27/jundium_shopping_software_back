@@ -4,11 +4,19 @@ import { PORT, FULL_DOMAIN_1 } from '../config/mongo.config.js';
 import mongoRoutes from '../routes/mongodb.routes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
+
 
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const uploadDir = path.join(__dirname, '../public/images');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log("Directorio './public/images' creado");
+}
 
 app.use(cors());
 app.use(express.json());
