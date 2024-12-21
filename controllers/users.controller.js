@@ -80,7 +80,6 @@ export const postUsers = async (req, res) => {
 };
 
 
-// Controlador para iniciar sesión
 export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -108,12 +107,34 @@ export const loginUser = async (req, res) => {
             });
         }
 
-        const token = jwt.sign(
+        const existingToken = jwt.sign(
             { email: user.email, id: user._id },
             JWT_SECRET,
             { expiresIn: '2h' }
         );
 
+        const decodedToken = jwt.decode(existingToken);
+        const currentTime = Math.floor(Date.now() / 1000);
+
+        if (decodedToken.exp - currentTime < 300) {
+            const refreshedToken = jwt.sign(
+                { email: user.email, id: user._id },
+                JWT_SECRET,
+                { expiresIn: '5m' } // Nuevo token con 5 minutos adicionales
+            );
+            return res.status(200).json({
+                data: {
+                    id: user._id,
+                    email: user.email,
+                    first_name: user.first_name
+                },
+                message: "Login correcto",
+                success: true,
+                token: refreshedToken,  // Enviar el token extendido
+            });
+        }
+
+        // Si el token no está cerca de expirar, se manda el token original
         res.status(200).json({
             data: {
                 id: user._id,
@@ -122,7 +143,7 @@ export const loginUser = async (req, res) => {
             },
             message: "Login correcto",
             success: true,
-            token,
+            token: existingToken,  // Enviar el token original
         });
     } catch (error) {
         console.error("Error al iniciar sesión:", error);
@@ -133,6 +154,7 @@ export const loginUser = async (req, res) => {
         });
     }
 };
+
 
 // Controlador para obtener un usuario por ID
 export const getUserById = async (req, res) => {

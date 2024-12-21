@@ -1,5 +1,5 @@
 import { Product } from '../data/mongodb.js';
-import { upload } from '../middlewares/multer.js'; // Asegúrate de que este middleware esté configurado
+// import { upload } from '../middlewares/multer.js';
 import { connectDB } from '../data/mongodb.js';
 import mongoose from 'mongoose';
 
@@ -11,68 +11,72 @@ function generateProductCode() {
 
 export const createProduct = async (req, res) => {
     try {
-        // Log para verificar los datos recibidos
-        console.log('Datos recibidos en el backend:', req.body);
-        console.log('Archivos recibidos:', req.files); // Los archivos deberían estar en req.files
+        const generalProduct = JSON.parse(req.body.generalProduct || "{}");
+        const variants = JSON.parse(req.body.variants || "[]");
 
-        // Desestructuración de los datos del producto
-        const { collection, brand, type, gender, new_arrival, featured } = req.body.generalProduct || {};
-        const { variants } = req.body;
-
-        // Verificar que los datos esenciales están presentes
-        if (!collection || !brand || !type || !gender || !Array.isArray(variants) || variants.length === 0) {
-            return res.status(400).json({ message: 'Faltan datos requeridos para crear el producto.' });
+        if (!generalProduct.collection || !generalProduct.brand || !generalProduct.type || !generalProduct.gender) {
+            return res.status(400).json({ message: "Faltan datos requeridos." });
         }
 
-        // Procesar las variantes y generar un código único
+        if (!Array.isArray(variants) || variants.length === 0) {
+            return res.status(400).json({ message: "Debe incluir al menos una variante." });
+        }
+
         const updatedVariants = await Promise.all(variants.map(async (variant) => {
             let productCode;
             let isUnique = false;
-
-            const variantId = new mongoose.Types.ObjectId();
-
-            // Generar códigos de producto únicos
+        
             while (!isUnique) {
                 productCode = generateProductCode();
                 const existingProduct = await Product.findOne({ 'variants.product_code': productCode });
-
+        
                 if (!existingProduct) {
                     isUnique = true;
                 }
             }
-
-            const updatedVariant = {
+        
+            // Generar un ID único para variant_id
+            const variantId = new mongoose.Types.ObjectId();
+        
+            return {
                 ...variant,
-                variant_id: variantId,
+                variant_id: variantId, // Asignar el nuevo ID único
                 product_code: productCode,
+                sizes: variant.sizes || [],
             };
-
-            delete updatedVariant._id;
-
-            return updatedVariant;
         }));
 
-        if (updatedVariants.some(v => !v.product_code)) {
-            return res.status(400).json({ message: 'Algunas variantes no tienen un código de producto válido.' });
-        }
-
-        // Crear el nuevo producto
         const product = new Product({
-            collection,
-            brand,
-            type,
-            gender,
-            new_arrival,
-            featured,
+            ...generalProduct,
             variants: updatedVariants,
-            images: req.files || [], // Asegúrate de que los archivos subidos estén guardados correctamente
+            // images: req.files ? req.files.map(file => file.path) : [],
         });
 
         await product.save();
-        res.status(201).json({ message: 'Producto creado con éxito.', product });
 
+        res.status(201).json({ message: "Producto creado con éxito.", product });
     } catch (error) {
-        console.error('Error al crear el producto:', error);
-        res.status(500).json({ message: 'Error al crear el producto.' });
+        console.error("Error al crear el producto:", error);
+        res.status(500).json({ message: "Error al crear el producto." });
     }
 };
+
+
+// export const createProduct = async (req, res) => {
+//     try {
+//         const generalProduct = JSON.parse(req.body.generalProduct || "{}");
+//         const variants = JSON.parse(req.body.variants || "[]");
+
+//         if (!generalProduct || !variants.length) {
+//             return res.status(400).json({ message: "Faltan datos requeridos." });
+//         }
+
+//         console.log("Datos recibidos:", generalProduct, variants);
+
+//         res.status(201).json({ message: "Producto creado con éxito." });
+//     } catch (error) {
+//         console.error("Error al crear el producto:", error);
+//         res.status(500).json({ message: "Error al crear el producto." });
+//     }
+// };
+

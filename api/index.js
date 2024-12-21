@@ -7,16 +7,13 @@ import { fileURLToPath } from 'url';
 
 const app = express();
 
-// Obtener __dirname para ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Rutas estáticas para imágenes
 app.use('/images', express.static(path.join(__dirname, '../public/images')));
 
 app.get('/', (req, res) => {
@@ -27,7 +24,6 @@ app.get('/', (req, res) => {
   `);
 });
 
-// Rutas para MongoDB
 app.use('/API/v1', mongoRoutes);
 
 app.listen(PORT, () => {
