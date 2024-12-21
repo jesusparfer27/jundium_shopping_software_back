@@ -25,31 +25,31 @@ export const createProduct = async (req, res) => {
         const updatedVariants = await Promise.all(variants.map(async (variant) => {
             let productCode;
             let isUnique = false;
-        
+
             while (!isUnique) {
                 productCode = generateProductCode();
                 const existingProduct = await Product.findOne({ 'variants.product_code': productCode });
-        
+
                 if (!existingProduct) {
                     isUnique = true;
                 }
             }
-        
-            // Generar un ID único para variant_id
+
             const variantId = new mongoose.Types.ObjectId();
-        
+
             return {
                 ...variant,
-                variant_id: variantId, // Asignar el nuevo ID único
+                variant_id: variantId,  // Asignar el nuevo ID único
                 product_code: productCode,
                 sizes: variant.sizes || [],
             };
         }));
 
+        // Aquí debes agregar la lógica para guardar las imágenes en el producto
         const product = new Product({
             ...generalProduct,
             variants: updatedVariants,
-            // images: req.files ? req.files.map(file => file.path) : [],
+            images: req.files ? req.files.map(file => file.path) : [],  // Guardar las imágenes subidas
         });
 
         await product.save();

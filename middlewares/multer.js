@@ -8,23 +8,27 @@ const app = express();
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const { generalProduct, variants } = req.body;
-        const gender = generalProduct.gender;
-        const type = generalProduct.type;
+        const gender = generalProduct?.gender || 'unknownGender';
+        const type = generalProduct?.type || 'unknownType';
         const variant = variants ? variants[0] : {};
-        const colorName = variant.colorName ? variant.color.colorName : 'unknownColor';
-        const name = variant.name || 'unknownProduct';
+        const colorName = variant?.colorName || 'unknownColor';
+        const name = variant?.name || 'unknownProduct';
 
-        const folderPath = path.join(__dirname, `../public/images/${gender}/${type}/${name}/${colorName}`);
+        const folderPath = path.join(__dirname, '../public/images', gender, type, name, colorName);
+
+        // Crear la carpeta si no existe
         fs.mkdirSync(folderPath, { recursive: true });
-        cb(null, folderPath);
+
+        cb(null, folderPath);  // Settea la ruta de destino
     },
     filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
+        cb(null, `${Date.now()}-${file.originalname}`);  // Nombre único para el archivo
     },
 });
 
 export const upload = multer({ storage });
 
+// Ruta para cargar las imágenes
 app.post('/upload-images', upload.array('image'), (req, res) => {
     try {
         console.log('Archivos recibidos:', req.files);
@@ -33,7 +37,7 @@ app.post('/upload-images', upload.array('image'), (req, res) => {
         }
         res.status(200).json({
             message: 'Imágenes subidas correctamente.',
-            imagePaths: req.files.map(f => f.path),
+            imagePaths: req.files.map(f => f.path),  // Responder con las rutas de las imágenes
         });
     } catch (err) {
         console.error('Error al subir imágenes:', err);
