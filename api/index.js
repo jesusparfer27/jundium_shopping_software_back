@@ -6,13 +6,14 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 
-
 const app = express();
 
+// Definir __dirname aquí
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const uploadDir = path.join(__dirname, '../public/images');
+// Crear el directorio de imágenes si no existe
+const uploadDir = path.resolve(__dirname, '../public/images'); 
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
     console.log("Directorio './public/images' creado");
@@ -36,6 +37,6 @@ app.use('/API/v1', mongoRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
-  });
+});
 
 export default app;

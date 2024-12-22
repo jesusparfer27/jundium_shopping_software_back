@@ -2,17 +2,34 @@ import { Product } from '../data/mongodb.js';
 // import { upload } from '../middlewares/multer.js';
 import { connectDB } from '../data/mongodb.js';
 import mongoose from 'mongoose';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 connectDB();
+
+// Esto es necesario para obtener __dirname en ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function generateProductCode() {
     return `PROD-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
 }
 
+// Función para crear la carpeta si no existe
+const createImageFolderIfNeeded = (folderPath) => {
+    const fullPath = path.join(__dirname, '../public/images', folderPath);
+    if (!fs.existsSync(fullPath)) {
+        fs.mkdirSync(fullPath, { recursive: true });
+        console.log(`Carpeta creada: ${fullPath}`);
+    }
+};
+
 export const createProduct = async (req, res) => {
     try {
         const generalProduct = JSON.parse(req.body.generalProduct || "{}");
         const variants = JSON.parse(req.body.variants || "[]");
+        const imageFolders = JSON.parse(req.body.imageFolders || "[]");
 
         if (!generalProduct.collection || !generalProduct.brand || !generalProduct.type || !generalProduct.gender) {
             return res.status(400).json({ message: "Faltan datos requeridos." });
@@ -21,6 +38,11 @@ export const createProduct = async (req, res) => {
         if (!Array.isArray(variants) || variants.length === 0) {
             return res.status(400).json({ message: "Debe incluir al menos una variante." });
         }
+
+        // Crear las carpetas para las imágenes
+        imageFolders.forEach((folderPath) => {
+            createImageFolderIfNeeded(folderPath);
+        });
 
         const updatedVariants = await Promise.all(variants.map(async (variant) => {
             let productCode;
