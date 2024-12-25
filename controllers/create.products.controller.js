@@ -64,6 +64,7 @@ export const createProduct = async (req, res) => {
                 variant_id: variantId,
                 product_code: productCode,
                 sizes: variant.sizes || [],
+                showing_image: variant.showing_image || "", // Asegúrate de pasar el campo `showing_image` aquí
             };
         }));
 
@@ -81,6 +82,7 @@ export const createProduct = async (req, res) => {
         res.status(500).json({ message: "Error al crear el producto." });
     }
 };
+
 
 export const uploadImages = (req, res) => {
     try {

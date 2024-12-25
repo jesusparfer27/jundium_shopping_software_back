@@ -249,10 +249,6 @@ const productSchema = new mongoose.Schema({
             showing_image: {
                 type: [String],
                 required: true
-            },
-            is_main: {
-                type: Boolean,
-                default: false
             }
         }
     ],
