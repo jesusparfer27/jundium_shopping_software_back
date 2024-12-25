@@ -48,7 +48,7 @@ router.put("/cart", authenticateToken, updateCartItem);
 router.put("/cart", authenticateToken, updateCartQuantity);
 
 
-router.post("/orders", authenticateToken, createOrder);
+router.post("/create-order", authenticateToken, createOrder);
 router.get("/orders", authenticateToken, getOrders);
 router.put("/orders/status", authenticateToken, updateOrderStatus);
 

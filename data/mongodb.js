@@ -246,6 +246,10 @@ const productSchema = new mongoose.Schema({
                 type: [String],
                 required: true
             },
+            showing_image: {
+                type: [String],
+                required: true
+            },
             is_main: {
                 type: Boolean,
                 default: false
@@ -397,23 +401,24 @@ const orderSchema = new mongoose.Schema({
                 required: true
             }
         }
-    ],
-    payment_methods: [
-        {
-            card_type: {
-                type: String,
-                required: true
-            },
-            card_number: {
-                type: String,
-                required: true
-            },
-            expiry_date: {
-                type: String,
-                required: true
-            }
-        }
     ]
+    // ,
+    // payment_methods: [
+    //     {
+    //         card_type: {
+    //             type: String,
+    //             required: true
+    //         },
+    //         card_number: {
+    //             type: String,
+    //             required: true
+    //         },
+    //         expiry_date: {
+    //             type: String,
+    //             required: true
+    //         }
+    //     }
+    // ]
 }, {
     timestamps: true,
     versionKey: false
