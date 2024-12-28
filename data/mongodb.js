@@ -182,6 +182,11 @@ const productSchema = new mongoose.Schema({
         enum: ['hombre', 'mujer', 'unisex'],
         required: true
     },
+    product_reference: {  // Nueva propiedad única
+        type: String,
+        required: true,
+        unique: true // Asegura que cada producto tenga una referencia única
+    },
     variants: [
         {
             _id: { type: mongoose.Schema.Types.ObjectId, auto: false },

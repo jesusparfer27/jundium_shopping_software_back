@@ -66,4 +66,33 @@ const getProducts = async (req, res) => {
     }
 };
 
+export const getProductByReferenceOrCode = async (req, res, next) => {
+    const { product_reference, product_code } = req.query;
+    console.log("Referencia recibida:", product_reference);
+
+    try {
+        let product;
+        if (product_reference) {
+            product = await Product.findOne({ product_reference }); // Busca directamente el campo
+        } else if (product_code) {
+            product = await Product.findOne({ product_code });
+        }
+
+        if (!product) {
+            return res.status(404).json({ message: "Producto no encontrado" });
+        }
+
+        console.log("Producto encontrado:", product);
+        return res.json(product);
+    } catch (error) {
+        console.error("Error en la búsqueda de producto:", error);
+        next(error);
+    }
+};
+
+
+
+
+
+
 export default getProducts;
