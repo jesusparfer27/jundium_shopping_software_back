@@ -5,7 +5,8 @@ import { authenticateToken } from '../middlewares/auth.js';
 import { addToWishlist, getWishlist, removeFromWishlist, createWishlist } from '../controllers/wishlist.controller.js';
 import { adminUser, verifyAdmin } from '../controllers/admin.controller.js';
 import { upload } from '../middlewares/multer.js';
-import { createProduct, uploadImages, addVariant } from '../controllers/create.products.controller.js';
+import { uploadToProduct } from '../middlewares/multer2.js';
+import { createProduct, uploadImages } from '../controllers/create.products.controller.js';
 import { registerUser } from '../controllers/register.controller.js';
 import { sendSupportEmail } from '../controllers/email.support.controller.js';
 import {
@@ -21,9 +22,8 @@ import {
     updateOrderStatus
 } from '../controllers/orders.controller.js';
 
-import { addVariantToProduct } from '../controllers/variant.controller.js';
+import { addVariant, uploadImagesToProduct } from '../controllers/variant.controller.js';
 
-// routes/product.routes.js
 import { editProduct, editVariant } from '../controllers/edit.products.controller.js';
 
 const router = Router();
@@ -42,17 +42,45 @@ router.post("/register", registerUser);
 router.post("/newsletter", authenticateToken, subscribeNewsletter)
 router.post('/support/email', authenticateToken, sendSupportEmail);
 
+
+
+
+
+
+
 router.post('/create-product', upload.array('images', 5), createProduct); 
-
-router.post('/products/:productId/variants', upload.array('images', 5), addVariantToProduct);
-
-router.get('/product/by-reference', authenticateToken, getProductByReferenceOrCode);
-router.post('/add-variant', authenticateToken, addVariant)
-
 router.post('/upload-images', upload.array('images', 5), uploadImages);
+
+router.post('/add-variant/:productReference', uploadToProduct.array('images', 5), addVariant)
+router.post('/upload-images/to-product', uploadToProduct.array('images', 5), uploadImagesToProduct)
+
+// router.post('/products/:productId/variants', upload.array('images', 5), addVariantToProduct);
+router.get('/product/by-reference', authenticateToken, getProductByReferenceOrCode);
+
+
+
+
+
+
+
+
+
 
 router.put('/products/:productReference', editProduct); // Para editar el producto por product_reference
 router.put('/products/:productReference/variants/:productCode', editVariant); // Para editar la variante por product_code
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 router.post("/cart", authenticateToken, addToCart);
 router.get("/cart", authenticateToken, getCart);
