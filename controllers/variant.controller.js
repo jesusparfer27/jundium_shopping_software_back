@@ -1,4 +1,3 @@
-// controllers/variant.controller.js
 import { Product } from '../data/mongodb.js';
 import mongoose from 'mongoose';
 
@@ -23,53 +22,87 @@ export const uploadImagesToProduct = (req, res) => {
 
 export const addVariant = async (req, res) => {
     try {
-      // Asegúrate de que se envíen datos JSON y que el cuerpo esté correctamente estructurado
-      if (!req.body.formData) {
-        return res.status(400).json({ message: "formData no está presente en la solicitud." });
-      }
-  
-      const variantData = JSON.parse(req.body.formData || "{}");
-      console.log(variantData); // Puedes revisar en consola si se reciben correctamente los datos
-      
-      // Verificar que la variante tenga los datos necesarios
-      if (!variantData.color || !variantData.price || !variantData.sizes) {
-        return res.status(400).json({ message: "Faltan datos esenciales de la variante." });
-      }
-  
-      const product = await Product.findOne({ product_reference: req.params.productReference });
-  
-      if (!product) {
-        return res.status(404).json({ message: "Producto no encontrado." });
-      }
-  
-      let productCode;
-      let isUnique = false;
-  
-      // Generar un código único para la variante
-      while (!isUnique) {
-        productCode = generateProductCode();
-        const existingProduct = await Product.findOne({ 'variants.product_code': productCode });
-  
-        if (!existingProduct) {
-          isUnique = true;
+        console.log("Cuerpo recibido:", req.body); // Depuración
+
+        // Validar si el campo `variants` está presente en el cuerpo de la solicitud
+        const variantsString = req.body.variants;
+        if (!variantsString) {
+            return res.status(400).json({ message: "El campo 'variants' no está presente en la solicitud." });
         }
-      }
-  
-      const variantId = new mongoose.Types.ObjectId();
-  
-      const newVariant = {
-        ...variantData,
-        variant_id: variantId,
-        product_code: productCode,
-      };
-  
-      product.variants.push(newVariant);
-      await product.save();
-  
-      res.status(201).json({ message: "Variante agregada con éxito.", newVariant });
+
+        // Parsear el JSON del campo `variants`
+        let variants;
+        try {
+            variants = JSON.parse(variantsString);
+        } catch (error) {
+            return res.status(400).json({ message: "Error al parsear el campo 'variants'.", error });
+        }
+
+        // Asegurarse de que `variants` es un array y contiene al menos una variante
+        if (!Array.isArray(variants) || variants.length === 0) {
+            return res.status(400).json({ message: "El campo 'variants' debe ser un array no vacío." });
+        }
+
+        // Buscar el producto relacionado por `product_reference`
+        const product = await Product.findOne({ product_reference: req.params.productReference });
+        if (!product) {
+            return res.status(404).json({ message: "Producto no encontrado." });
+        }
+
+        // Agregar cada variante al producto
+        for (const variantData of variants) {
+            if (!variantData.color || !variantData.price || !variantData.sizes) {
+                return res.status(400).json({ message: "Faltan datos esenciales de una variante." });
+            }
+
+            // Generar un código único para la variante
+            const productCode = await generateUniqueProductCode();
+
+            // Crear el ID único para la variante
+            const variantId = new mongoose.Types.ObjectId();
+
+            // Crear la nueva variante
+            const newVariant = {
+                ...variantData,
+                variant_id: variantId,
+                product_code: productCode,
+            };
+
+            // Añadir la variante al producto
+            product.variants.push(newVariant);
+        }
+
+        // Guardar el producto actualizado en la base de datos
+        await product.save();
+
+        // Responder con éxito
+        res.status(201).json({ message: "Variantes agregadas con éxito.", variants: product.variants });
     } catch (error) {
-      console.error("Error al agregar la variante:", error);
-      res.status(500).json({ message: "Error al agregar la variante." });
+        console.error("Error al agregar la variante:", error);
+        res.status(500).json({ message: "Error al agregar la variante." });
     }
-  };
-  
+};
+
+// Función para generar un código único de producto
+const generateUniqueProductCode = async () => {
+    let productCode;
+    let isUnique = false;
+
+    while (!isUnique) {
+        productCode = generateProductCode(); // Función que genera un código aleatorio
+        const existingProduct = await Product.findOne({ 'variants.product_code': productCode });
+        isUnique = !existingProduct;
+    }
+
+    return productCode;
+};
+
+// Función para generar un código alfanumérico
+const generateProductCode = () => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 10; i++) {
+        code += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return `PROD-${code}`;
+};
