@@ -68,14 +68,20 @@ const getProducts = async (req, res) => {
 
 export const getProductByReferenceOrCode = async (req, res, next) => {
     const { product_reference, product_code } = req.query;
-    console.log("Referencia recibida:", product_reference);
+
+    console.log("Referencia recibida:", { product_reference, product_code });
 
     try {
         let product;
+
         if (product_reference) {
-            product = await Product.findOne({ product_reference }); // Busca directamente el campo
+            // Busca el producto por referencia directamente
+            product = await Product.findOne({ product_reference });
         } else if (product_code) {
-            product = await Product.findOne({ product_code });
+            // Busca el producto por el código en las variantes
+            product = await Product.findOne({
+                variants: { $elemMatch: { product_code } },
+            });
         }
 
         if (!product) {
@@ -83,6 +89,23 @@ export const getProductByReferenceOrCode = async (req, res, next) => {
         }
 
         console.log("Producto encontrado:", product);
+
+        // Si se buscó por product_code, devuelve solo la variante correspondiente
+        if (product_code) {
+            const filteredVariant = product.variants.find(
+                (variant) => variant.product_code === product_code
+            );
+
+            if (!filteredVariant) {
+                return res
+                    .status(404)
+                    .json({ message: "Variante no encontrada con el código proporcionado" });
+            }
+
+            return res.json({ product, variant: filteredVariant });
+        }
+
+        // Si se buscó por product_reference, devuelve todo el producto
         return res.json(product);
     } catch (error) {
         console.error("Error en la búsqueda de producto:", error);

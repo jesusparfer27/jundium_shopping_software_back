@@ -42,12 +42,6 @@ router.post("/register", registerUser);
 router.post("/newsletter", authenticateToken, subscribeNewsletter)
 router.post('/support/email', authenticateToken, sendSupportEmail);
 
-
-
-
-
-
-
 router.post('/create-product', upload.array('images', 5), createProduct); 
 router.post('/upload-images', upload.array('images', 5), uploadImages);
 
@@ -57,17 +51,10 @@ router.post('/upload-images/to-product', uploadToProduct.array('images', 5), upl
 // router.post('/products/:productId/variants', upload.array('images', 5), addVariantToProduct);
 router.get('/product/by-reference', authenticateToken, getProductByReferenceOrCode);
 
+router.put('/edit-general-data/:productReference', editProduct);
+router.put('/edit-variant-data/:productCode',uploadToProduct.array('images', 5), editVariant);
 
-
-
-
-
-
-
-
-
-router.put('/products/:productReference', editProduct); // Para editar el producto por product_reference
-router.put('/products/:productReference/variants/:productCode', editVariant); // Para editar la variante por product_code
+router.post('/upload-images/:productCode', uploadToProduct.array('images', 5), uploadImages);
 
 
 
