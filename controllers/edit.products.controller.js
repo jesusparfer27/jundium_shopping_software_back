@@ -83,9 +83,3 @@ export const editVariant = async (req, res) => {
         res.status(500).json({ message: "Error al actualizar las variantes." });
     }
 };
-
-
-
-
-
-

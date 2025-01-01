@@ -55,6 +55,11 @@ export const addVariant = async (req, res) => {
                 return res.status(400).json({ message: "Faltan datos esenciales de una variante." });
             }
 
+            // Asegúrate de que 'originalPrice' esté incluido en variantData
+            if (!variantData.originalPrice) {
+                return res.status(400).json({ message: "El campo 'originalPrice' es obligatorio para cada variante." });
+            }
+
             // Generar un código único para la variante
             const productCode = await generateUniqueProductCode();
 
@@ -82,6 +87,7 @@ export const addVariant = async (req, res) => {
         res.status(500).json({ message: "Error al agregar la variante." });
     }
 };
+
 
 // Función para generar un código único de producto
 const generateUniqueProductCode = async () => {

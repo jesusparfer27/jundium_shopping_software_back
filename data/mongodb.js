@@ -210,10 +210,6 @@ const productSchema = new mongoose.Schema({
                 required: true,
                 unique: true
             },
-            out_of_stock: {
-                type: Boolean,
-                default: false
-            },
             color: {
                 colorName: {
                     type: String,
@@ -232,7 +228,11 @@ const productSchema = new mongoose.Schema({
                     stock: {
                         type: Number,
                         required: true
-                    }
+                    },
+                    out_of_stock: {
+                        type: Boolean,
+                        default: false
+                    },
                 }
             ],
             material: {
@@ -244,6 +244,10 @@ const productSchema = new mongoose.Schema({
                 required: true
             },
             price: {
+                type: Number,
+                required: true
+            },
+            originalPrice: {
                 type: Number,
                 required: true
             },
