@@ -2,6 +2,7 @@ import { connectDB } from '../data/mongodb.js';
 import { Order } from '../data/mongodb.js'; // Asegúrate de importar correctamente el modelo
 import mongoose from 'mongoose';
 import { authenticateToken } from '../middlewares/auth.js';
+import { Product } from '../data/mongodb.js';
 import crypto from 'crypto';
 
 connectDB();
@@ -11,18 +12,11 @@ export const generateOrderCode = () => {
 };
 
 export const createOrder = async (req, res, next) => {
+    const session = await mongoose.startSession(); // Inicia una sesión para la transacción
+    session.startTransaction(); // Inicia una transacción
     try {
         const { user_id, items, total, status } = req.body;
 
-        // Log para inspeccionar los datos recibidos del frontend
-        console.log('Datos recibidos en el controlador:', {
-            user_id,
-            items,
-            total,
-            status,
-        });
-
-        // Validación manual de campos requeridos
         if (!user_id || !mongoose.Types.ObjectId.isValid(user_id)) {
             return res.status(400).json({ message: 'ID de usuario no válido o no proporcionado.' });
         }
@@ -35,48 +29,71 @@ export const createOrder = async (req, res, next) => {
             return res.status(400).json({ message: 'El total debe ser un número positivo.' });
         }
 
-        // Validación de cada artículo
+        // Validación y actualización de stock por cada artículo
         for (const item of items) {
-            console.log('Validando artículo:', item);
+            const { product_id, variant_id, quantity, size } = item;
 
-            if (!item.product_id || !mongoose.Types.ObjectId.isValid(item.product_id)) {
-                return res.status(400).json({ message: 'ID de producto no válido en uno de los artículos.' });
+            const product = await Product.findOne(
+                { _id: product_id, 'variants.variant_id': variant_id },
+                { 'variants.$': 1 } // Selecciona solo la variante correspondiente
+            ).session(session);
+
+            if (!product) {
+                throw new Error(`Producto con ID ${product_id} o variante ${variant_id} no encontrado.`);
             }
-            if (!item.variant_id || !mongoose.Types.ObjectId.isValid(item.variant_id)) {
-                return res.status(400).json({ message: 'ID de variante no válido en uno de los artículos.' });
+
+            const variant = product.variants[0]; // Accede a la variante seleccionada
+            const sizeIndex = variant.sizes.findIndex((s) => s.size === size);
+
+            if (sizeIndex === -1) {
+                throw new Error(`Tamaño ${size} no encontrado para la variante ${variant_id}.`);
             }
-            if (!item.quantity || typeof item.quantity !== 'number' || item.quantity <= 0) {
-                return res.status(400).json({ message: 'La cantidad debe ser un número positivo.' });
+
+            if (variant.sizes[sizeIndex].stock < quantity) {
+                throw new Error(`Stock insuficiente para el tamaño ${size} del producto ${product_id}.`);
             }
-            if (!item.price || typeof item.price !== 'number' || item.price <= 0) {
-                return res.status(400).json({ message: 'El precio debe ser un número positivo.' });
-            }
-            if (!item.colorName || typeof item.colorName !== 'string') {
-                return res.status(400).json({ message: 'El nombre del color es obligatorio y debe ser una cadena.' });
-            }
-            if (!item.size || typeof item.size !== 'string') {
-                return res.status(400).json({ message: 'El tamaño es obligatorio y debe ser una cadena.' });
-            }
+
+            // Reduce el stock en la base de datos sin hacer un save del producto
+            await Product.updateOne(
+                { _id: product_id, 'variants.variant_id': variant_id },
+                {
+                    $inc: { [`variants.$.sizes.${sizeIndex}.stock`]: -quantity }, // Resta la cantidad del stock
+                    $set: { [`variants.$.sizes.${sizeIndex}.out_of_stock`]: variant.sizes[sizeIndex].stock - quantity <= 0 }
+                },
+                { session }
+            );
         }
 
-        // Crear pedido
-        const newOrder = await Order.create({
-            user_id,
-            orderCode: generateOrderCode(),
-            total,
-            status: status || 'Pending',
-            items,
-        });
+        // Crear el pedido
+        const newOrder = await Order.create(
+            [
+                {
+                    user_id,
+                    orderCode: generateOrderCode(),
+                    total,
+                    status: status || 'Pending',
+                    items,
+                }
+            ],
+            { session }
+        );
+
+        await session.commitTransaction(); // Confirma la transacción
+        session.endSession();
 
         res.status(201).json({
             message: 'Pedido creado exitosamente.',
             order: newOrder,
         });
     } catch (error) {
+        await session.abortTransaction(); // Revierte los cambios si hay un error
+        session.endSession();
         console.error('Error al crear el pedido:', error);
-        next(error); // Manejo de errores centralizado
+        next(error);
     }
 };
+
+
 
 
 export const getOrders = async (req, res, next) => {
