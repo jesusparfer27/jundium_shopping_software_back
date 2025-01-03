@@ -14,7 +14,8 @@ import {
     getCart,
     removeFromCart,
     updateCartItem,
-    updateCartQuantity
+    updateCartQuantity,
+    deleteCart
 } from '../controllers/cart.controller.js';
 import {
     createOrder,
@@ -74,6 +75,7 @@ router.get("/cart", authenticateToken, getCart);
 router.delete("/cart/:productId/:variantId", authenticateToken, removeFromCart);
 router.put("/cart", authenticateToken, updateCartItem);
 router.put("/cart", authenticateToken, updateCartQuantity);
+router.delete("/cart/:cartId", authenticateToken, deleteCart)
 
 
 router.post("/create-order", authenticateToken, createOrder);

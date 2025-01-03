@@ -174,3 +174,22 @@ export const updateCartQuantity = async (req, res) => {
         res.status(500).json({ message: 'Error al actualizar la cantidad del carrito.' });
     }
 };
+
+export const deleteCart = async (req, res) => {
+    const { cartId } = req.params;
+  
+    try {
+      // Asegúrate de que el carrito existe antes de eliminarlo
+      const cart = await Cart.findById(cartId);
+      if (!cart) {
+        return res.status(404).json({ message: 'Carrito no encontrado' });
+      }
+  
+      await Cart.findByIdAndDelete(cartId); // Elimina el carrito
+      res.status(200).json({ message: 'Carrito eliminado exitosamente' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error al eliminar el carrito', error });
+    }
+  };
+  
