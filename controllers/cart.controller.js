@@ -78,7 +78,7 @@ export const addToCart = async (req, res) => {
   
   
 export const removeFromCart = async (req, res) => {
-    const { productId, variantId } = req.params; 
+    const { productId, variantId } = req.params;  
     const userId = req.user.id;
 
     try {
