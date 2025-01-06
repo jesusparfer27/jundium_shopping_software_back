@@ -9,8 +9,5 @@
     { "src": "/api/(.*)", "dest": "/api/index.js" },
     { "src": "/images/(.*)", "dest": "/public/images/$1" },
     { "src": "/(.*)", "dest": "/index.html" }
-  ],
-  "rewrites": [
-    {"source": "/(.*)", "destination": "/"}
   ]
 }
