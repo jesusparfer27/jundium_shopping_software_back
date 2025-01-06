@@ -3,7 +3,7 @@
   "builds": [{ "src": "api/index.js", "use": "@vercel/node" }],
   "routes": [
     { "handle": "filesystem" },
-    { "src": "/images/(.*)", "dest": "/public/images/$1" },
+    { "src": "/public/images/(.*)", "dest": "/public/images/$1" },
     { "src": "/(.*)", "dest": "/api/index.js" }
   ]
 }
