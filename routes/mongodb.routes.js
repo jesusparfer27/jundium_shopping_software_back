@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import getProducts, { getProductById, getProductByReferenceOrCode } from "../controllers/product.controller.js";
+import { getProductById, getProductByReferenceOrCode, getProducts } from "../controllers/product.controller.js";
 import { getUsers, loginUser, getUserById, getMe, updateUserById, subscribeNewsletter } from '../controllers/users.controller.js';
 import { authenticateToken } from '../middlewares/auth.js';
 import { addToWishlist, getWishlist, removeFromWishlist, createWishlist } from '../controllers/wishlist.controller.js';
@@ -22,9 +22,7 @@ import {
     getOrders,
     updateOrderStatus
 } from '../controllers/orders.controller.js';
-
 import { addVariant, uploadImagesToProduct } from '../controllers/variant.controller.js';
-
 import { editProduct, editVariant } from '../controllers/edit.products.controller.js';
 
 const router = Router();
@@ -57,26 +55,12 @@ router.put('/edit-variant-data/:productCode',uploadToProduct.array('images', 5),
 
 router.post('/upload-images/:productCode', uploadToProduct.array('images', 5), uploadImages);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 router.post("/cart", authenticateToken, addToCart);
 router.get("/cart", authenticateToken, getCart);
 router.delete("/cart/:productId/:variantId", authenticateToken, removeFromCart);
 router.put("/cart", authenticateToken, updateCartItem);
 router.put("/cart", authenticateToken, updateCartQuantity);
 router.delete("/cart/:cartId", authenticateToken, deleteCart)
-
 
 router.post("/create-order", authenticateToken, createOrder);
 router.get("/orders", authenticateToken, getOrders);
@@ -86,7 +70,6 @@ router.post("/wishlist/add", authenticateToken, addToWishlist);
 router.get("/wishlist", authenticateToken, getWishlist);
 router.delete("/wishlist/:productId/:variantId", authenticateToken, removeFromWishlist);
 router.post('/wishlist/create', authenticateToken, createWishlist);
-
 
 router.get("/products/filter", getProducts);
 

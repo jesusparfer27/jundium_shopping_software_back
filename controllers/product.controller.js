@@ -29,12 +29,18 @@ export const getProductById = async (req, res) => {
 };
 
 // Obtener todos los productos con filtros
-const getProducts = async (req, res) => {
+export const getProducts = async (req, res) => {
     try {
-        const { type, color, size, discount, product_code, gender, collection, price } = req.query; // Obtener filtros desde la query
+        const { search, type, color, size, discount, product_code, gender, collection, price } = req.query;
         const filters = {};
 
-        // Aplicar filtros
+        // Filtrado por nombre
+        if (search) {
+            const searchTerm = search.replace(/%20/g, ' '); // Decodificar espacios
+            filters['variants.name'] = { $regex: searchTerm, $options: 'i' }; // Búsqueda insensible a mayúsculas
+        }
+
+        // Filtrado por otros parámetros
         if (type) filters.type = type;
         if (color) filters['variants.color.colorName'] = color;
         if (size) filters['variants.sizes.size'] = size;
@@ -43,28 +49,28 @@ const getProducts = async (req, res) => {
         if (gender) filters.gender = gender;
         if (collection) filters.collection = collection;
 
-        // Filtro por price
+        // Filtrado por precio
         if (price) {
             const priceRange = price.split('-');
             if (priceRange.length === 2) {
-                // Si se proporciona un rango de precios, aplicar $gte y $lte
                 const minPrice = parseFloat(priceRange[0]);
                 const maxPrice = parseFloat(priceRange[1]);
                 filters.price = { $gte: minPrice, $lte: maxPrice };
             } else {
-                // Si solo se proporciona un precio específico, aplicar $eq
                 const price = parseFloat(price);
                 filters.price = price;
             }
         }
 
-        const products = await Product.find(filters);
+        // Buscar los productos con los filtros
+        const products = await Product.find(filters).populate('variants');
         res.json(products);
     } catch (e) {
-        console.error(e); // Para depuración
+        console.error(e);
         res.status(500).json({ message: e.message });
     }
 };
+
 
 export const getProductByReferenceOrCode = async (req, res, next) => {
     const { product_reference, product_code } = req.query;
@@ -113,9 +119,21 @@ export const getProductByReferenceOrCode = async (req, res, next) => {
     }
 };
 
+export const filterByName = async (req, res) => {
+    try {
+        const search = req.params.name.replace(/%20/g, ' ') || ''; // Decodificar el nombre con espacios
+        const query = search
+            ? { 'variants.name': { $regex: search, $options: 'i' } } // Insensible a mayúsculas
+            : {}; // Si no se pasa nombre, devuelve todos los productos
+
+        const products = await Product.find(query).populate('variants');
+        res.json(products);
+    } catch (error) {
+        res.status(500).json({
+            message: 'Error al obtener los productos',
+            error: error.message,
+        });
+    }
+};
 
 
-
-
-
-export default getProducts;
