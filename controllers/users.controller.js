@@ -124,7 +124,7 @@ export const loginUser = async (req, res) => {
         const existingToken = jwt.sign(
             { email: user.email, id: user._id },
             JWT_SECRET,
-            { expiresIn: '2h' }
+            { expiresIn: '3h' }
         );
 
         // Decodificar el token para verificar tiempo de expiración
