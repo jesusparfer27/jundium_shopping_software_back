@@ -27,51 +27,73 @@ import { editProduct, editVariant } from '../controllers/edit.products.controlle
 
 const router = Router();
 
-router.get("/products", getProducts);
-router.get("/products/:id", getProductById);
-router.get("/me", authenticateToken, getMe);
-router.get("/users", getUsers);
 
-router.patch("/me/update", authenticateToken, updateUserById)
+/**
+ * Rutas de productos
+ * - Gestiona productos y sus variantes
+ */
+router.get("/products", getProducts); // Obtiene todos los productos
+router.get("/products/:id", getProductById); // Obtiene un producto por su ID
+router.get('/product/by-reference', authenticateToken, getProductByReferenceOrCode); // Obtiene un producto por referencia o código
 
-router.get("/admin", verifyAdmin, adminUser);
-
-router.post("/login", loginUser, authenticateToken);
-router.post("/register", registerUser);
-router.post("/newsletter", authenticateToken, subscribeNewsletter)
-router.post('/support/email', authenticateToken, sendSupportEmail);
-
-router.post('/create-product', upload.array('images', 5), createProduct); 
-router.post('/upload-images', upload.array('images', 5), uploadImages);
-
-router.post('/add-variant/:productReference', uploadToProduct.array('images', 5), addVariant)
-router.post('/upload-images/to-product', uploadToProduct.array('images', 5), uploadImagesToProduct)
-
-// router.post('/products/:productId/variants', upload.array('images', 5), addVariantToProduct);
-router.get('/product/by-reference', authenticateToken, getProductByReferenceOrCode);
+router.post('/create-product', upload.array('images', 5), createProduct); // Crea un nuevo producto con imágenes
+router.post('/add-variant/:productReference', uploadToProduct.array('images', 5), addVariant); // Agrega una variante a un producto
+router.post('/upload-images', upload.array('images', 5), uploadImages); // Sube imágenes para un producto
+router.post('/upload-images/to-product', uploadToProduct.array('images', 5), uploadImagesToProduct); // Sube imágenes a un producto específico
+router.post('/upload-images/:productCode', uploadToProduct.array('images', 5), uploadImages); // Sube imágenes para una variante específica de un producto
 
 router.put('/edit-general-data/:productReference', editProduct);
 router.put('/edit-variant-data/:productCode',uploadToProduct.array('images', 5), editVariant);
 
-router.post('/upload-images/:productCode', uploadToProduct.array('images', 5), uploadImages);
+/**
+ * Rutas de usuarios
+ * - Gestiona cuentas de usuarios y su perfil
+ */
+router.get("/me", authenticateToken, getMe); // Obtiene el perfil del usuario actual
+router.get("/users", getUsers); // Obtiene todos los usuarios
+router.patch("/me/update", authenticateToken, updateUserById); // Actualiza el perfil del usuario actual
+router.post("/login", loginUser, authenticateToken); // Inicia sesión de un usuario
+router.post("/register", registerUser); // Registra un nuevo usuario
+router.post("/newsletter", authenticateToken, subscribeNewsletter); // Suscribe al usuario al boletín
 
-router.post("/cart", authenticateToken, addToCart);
-router.get("/cart", authenticateToken, getCart);
-router.delete("/cart/:productId/:variantId", authenticateToken, removeFromCart);
-router.put("/cart", authenticateToken, updateCartItem);
-router.put("/cart", authenticateToken, updateCartQuantity);
-router.delete("/cart/:cartId", authenticateToken, deleteCart)
+/**
+ * Rutas de administración
+ * - Funcionalidades exclusivas para administradores
+ */
+router.get("/admin", verifyAdmin, adminUser); // Accede al panel de administración (requiere verificación)
 
-router.post("/create-order", authenticateToken, createOrder);
-router.get("/orders", authenticateToken, getOrders);
-router.put("/orders/status", authenticateToken, updateOrderStatus);
+/**
+ * Rutas de soporte
+ * - Gestiona funcionalidades de soporte al usuario
+ */
+router.post('/support/email', authenticateToken, sendSupportEmail); // Envía un correo de soporte
 
-router.post("/wishlist/add", authenticateToken, addToWishlist);
-router.get("/wishlist", authenticateToken, getWishlist);
-router.delete("/wishlist/:productId/:variantId", authenticateToken, removeFromWishlist);
-router.post('/wishlist/create', authenticateToken, createWishlist);
+/**
+ * Rutas del carrito de compras
+ * - Gestiona el carrito de compras del usuario
+ */
+router.post("/cart", authenticateToken, addToCart); // Agrega un producto al carrito
+router.get("/cart", authenticateToken, getCart); // Obtiene los productos del carrito
+router.delete("/cart/:productId/:variantId", authenticateToken, removeFromCart); // Elimina un producto específico del carrito
+router.put("/cart", authenticateToken, updateCartItem); // Actualiza los detalles de un producto en el carrito
+router.put("/cart", authenticateToken, updateCartQuantity); // Actualiza la cantidad de productos en el carrito
+router.delete("/cart/:cartId", authenticateToken, deleteCart); // Elimina todo el carrito
 
-router.get("/products/filter", getProducts);
+/**
+ * Rutas de pedidos
+ * - Gestiona pedidos y su estado
+ */
+router.post("/create-order", authenticateToken, createOrder); // Crea un nuevo pedido
+router.get("/orders", authenticateToken, getOrders); // Obtiene los pedidos del usuario
+router.put("/orders/status", authenticateToken, updateOrderStatus); // Actualiza el estado de un pedido
 
+/**
+ * Rutas de wishlist
+ * - Gestiona la lista de deseos del usuario
+ */
+router.post("/wishlist/add", authenticateToken, addToWishlist); // Agrega un producto a la lista de deseos
+router.get("/wishlist", authenticateToken, getWishlist); // Obtiene los productos de la lista de deseos
+router.delete("/wishlist/:productId/:variantId", authenticateToken, removeFromWishlist); // Elimina un producto específico de la lista de deseos
+router.post('/wishlist/create', authenticateToken, createWishlist); // Crea una lista de deseos
 
 export default router;

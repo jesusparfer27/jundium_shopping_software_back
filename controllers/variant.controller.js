@@ -1,20 +1,25 @@
 import { Product } from '../data/mongodb.js';
 import mongoose from 'mongoose';
 
+// Controlador para subir imágenes relacionadas con un producto
 export const uploadImagesToProduct = (req, res) => {
     try {
+        // Depuración: Mostrar contenido de la solicitud y los archivos recibidos
         console.log('Contenido de la solicitud:', req.body);
         console.log('Archivos recibidos:', req.files);
 
+        // Verificar si se han recibido archivos
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({ message: 'No se han subido imágenes.' });
         }
 
+        // Responder con éxito incluyendo las rutas de las imágenes subidas
         res.status(200).json({
             message: 'Imágenes subidas correctamente.',
             imagePaths: req.files.map(f => f.path),
         });
     } catch (err) {
+        // Manejo de errores en caso de fallo al subir imágenes
         console.error('Error al subir imágenes:', err);
         res.status(500).json({ error: 'Error al subir imágenes.' });
     }
@@ -95,7 +100,9 @@ const generateUniqueProductCode = async () => {
     let isUnique = false;
 
     while (!isUnique) {
-        productCode = generateProductCode(); // Función que genera un código aleatorio
+        // Generar un código de producto aleatorio
+        productCode = generateProductCode();
+        // Verificar si el código ya existe en la base de datos
         const existingProduct = await Product.findOne({ 'variants.product_code': productCode });
         isUnique = !existingProduct;
     }

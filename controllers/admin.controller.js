@@ -1,51 +1,54 @@
-import { connectDB } from '../data/mongodb.js';
-import { User } from '../data/mongodb.js';
-import jwt from 'jsonwebtoken';
+import { connectDB } from '../data/mongodb.js';  // Importa la función para conectar a la base de datos MongoDB
+import { User } from '../data/mongodb.js';  // Importa el modelo de usuario desde la base de datos
+import jwt from 'jsonwebtoken';  // Importa la librería jsonwebtoken para manejar tokens JWT
 
-connectDB();
+connectDB(); // Llama a la función para establecer la conexión con la base de datos MongoDB
 
+// Middleware para verificar si el usuario tiene permisos de administrador
 export const verifyAdmin = async (req, res, next) => {
     try {
         const token = req.headers.authorization?.split(' ')[1];  // Obtener el token
-        if (!token) {
+        if (!token) { // Si no se encuentra un token, retorna un error 401
             return res.status(401).json({ message: 'No autorizado, se requiere un token.' });
         }
 
-        // Verificación del token y decodificación
+        // Verifica y decodifica el token JWT utilizando la clave secreta del entorno
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const userId = decoded.id;
+        const userId = decoded.id;  // Extrae el ID del usuario del token decodificado
 
-        // Buscar usuario en la base de datos
+        // Busca al usuario en la base de datos utilizando el ID extraído del token
         const user = await User.findById(userId);
-        if (!user) {
+        if (!user) {  // Si el usuario no existe, retorna un error 404
             return res.status(404).json({ message: 'Usuario no encontrado.' });
         }
 
-        // Verificar permisos
+        // Obtiene los permisos del usuario desde su perfil en la base de datos
         const permissions = user.permissions;
 
-        // Verificación más flexible de permisos
+        // Define los permisos requeridos para acceder a la siguiente parte del sistema
         const requiredPermissions = ['manage_users', 'view_reports', 'manage_products', 'manage_orders'];
-        const hasRequiredPermissions = requiredPermissions.every(permission => permissions[permission]);
+        const hasRequiredPermissions = requiredPermissions.every(permission => permissions[permission]); // Verifica si el usuario tiene todos los permisos necesarios
 
+        // Si el usuario no tiene los permisos necesarios, retorna un error 403
         if (!hasRequiredPermissions) {
             return res.status(403).json({ message: 'Acceso denegado. Se requieren permisos administrativos.' });
         }
 
-
+        // Si el usuario tiene permisos, pasa el control al siguiente middleware
         req.user = user;
         next();
     } catch (error) {
-        console.error(error);
-        next(error);  // Manejo de errores
+        console.error(error); // Imprime el error en la consola si ocurre uno
+        next(error);  // Pasa el error al siguiente middleware de manejo de errores
     }
 };
 
+// Middleware para manejar la lógica de usuario administrador y responder con información sobre los permisos
 export const adminUser = async (req, res, next) => {
     try {
         console.log("Ver contenido privado de admin");
 
-        // Obtener el usuario desde la petición (debe haber sido agregado por el middleware verifyAdmin)
+        // Obtiene el usuario que ha sido validado por el middleware verifyAdmin
         const user = req.user;
 
         // Obtener los permisos del usuario (esto depende de cómo estés guardando los permisos en el modelo User)

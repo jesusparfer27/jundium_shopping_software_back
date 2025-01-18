@@ -1,12 +1,13 @@
 import mongoose from 'mongoose';
 import { mongodbUri } from '../config/mongo.config.js';
-import { type } from 'os';
 
+// Función para conectar a la base de datos MongoDB
 const connectDB = async () => {
     try {
         await mongoose.connect(mongodbUri, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
+            useNewUrlParser: true, // Usa el nuevo parser de URL para evitar advertencias de deprecación
+            useUnifiedTopology: true // Habilita el nuevo motor de gestión de conexiones
+
         });
         console.log("MongoDB conectado correctamente");
     } catch (error) {
@@ -15,10 +16,11 @@ const connectDB = async () => {
     }
 };
 
+// Schema para usuarios
 const userSchema = new mongoose.Schema({
     first_name: {
-        type: String,
-        required: true
+        type: String, // Tipo de formato para MongoDB
+        required: true // Campos requeridos
     },
     last_name: {
         type: String,
@@ -34,9 +36,9 @@ const userSchema = new mongoose.Schema({
         unique: true,
         validate: {
             validator: function (v) {
-                return /^\S+@\S+\.\S+$/.test(v);
+                return /^\S+@\S+\.\S+$/.test(v); // Validación de formato de correo
             },
-            message: props => `${props.value} no es un correo válido!`
+            message: props => `${props.value} no es un correo válido!` // Mensaje personalizado si falla la validación
         }
     },
     phone_number: {
@@ -74,7 +76,7 @@ const userSchema = new mongoose.Schema({
     },
     wishlist: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Wishlist'
+        ref: 'Wishlist' // Relacionar con el Schema de Wishlist
     },
     orders: {
         type: [mongoose.Schema.Types.ObjectId],
@@ -82,7 +84,7 @@ const userSchema = new mongoose.Schema({
     },
     cart: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Cart'
+        ref: 'Cart' 
     },
     contact_preferences: {
         email: {
@@ -164,6 +166,7 @@ const supportEmailSchema = new mongoose.Schema({
     versionKey: false
 });
 
+// Schema para Productos
 const productSchema = new mongoose.Schema({
     collection: {
         type: String,
@@ -275,6 +278,7 @@ const productSchema = new mongoose.Schema({
     strict: false
 });
 
+// Schema para productos guardados en Wishlist
 const wishlistSchema = new mongoose.Schema({
     user_id: {
         type: mongoose.Schema.Types.ObjectId,
@@ -303,7 +307,7 @@ const wishlistSchema = new mongoose.Schema({
     versionKey: false
 });
 
-
+// Schema para productos en el carrito
 const cartSchema = new mongoose.Schema({
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
@@ -353,7 +357,7 @@ const cartSchema = new mongoose.Schema({
     versionKey: false
   });
 
-// Schema de Orders
+// Schema de pedidos
 const orderSchema = new mongoose.Schema({
     user_id: {
         type: mongoose.Schema.Types.ObjectId,
@@ -407,29 +411,12 @@ const orderSchema = new mongoose.Schema({
             }
         }
     ]
-    // ,
-    // payment_methods: [
-    //     {
-    //         card_type: {
-    //             type: String,
-    //             required: true
-    //         },
-    //         card_number: {
-    //             type: String,
-    //             required: true
-    //         },
-    //         expiry_date: {
-    //             type: String,
-    //             required: true
-    //         }
-    //     }
-    // ]
 }, {
     timestamps: true,
     versionKey: false
 });
 
-// Modelos
+// Modelos de MongoDB
 const User = mongoose.model('User', userSchema, 'accounts');
 const Product = mongoose.model('Product', productSchema, 'products');
 const Wishlist = mongoose.model('Wishlist', wishlistSchema, 'wishlists');

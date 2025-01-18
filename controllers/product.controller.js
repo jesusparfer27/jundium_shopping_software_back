@@ -72,31 +72,31 @@ export const getProducts = async (req, res) => {
 };
 
 
+// Obtener producto por referencia o código
 export const getProductByReferenceOrCode = async (req, res, next) => {
-    const { product_reference, product_code } = req.query;
-
-    console.log("Referencia recibida:", { product_reference, product_code });
+    const { product_reference, product_code } = req.query; // Obtiene los parámetros de referencia o código
+    console.log("Referencia recibida:", { product_reference, product_code }); // Registro para depuración
 
     try {
         let product;
 
         if (product_reference) {
-            // Busca el producto por referencia directamente
+            // Busca el producto por referencia
             product = await Product.findOne({ product_reference });
         } else if (product_code) {
-            // Busca el producto por el código en las variantes
+            // Busca el producto por código en las variantes
             product = await Product.findOne({
                 variants: { $elemMatch: { product_code } },
             });
         }
 
         if (!product) {
-            return res.status(404).json({ message: "Producto no encontrado" });
+            return res.status(404).json({ message: "Producto no encontrado" }); // Producto no encontrado
         }
 
         console.log("Producto encontrado:", product);
 
-        // Si se buscó por product_code, devuelve solo la variante correspondiente
+        // Devuelve solo la variante correspondiente si se busca por código
         if (product_code) {
             const filteredVariant = product.variants.find(
                 (variant) => variant.product_code === product_code
@@ -108,29 +108,29 @@ export const getProductByReferenceOrCode = async (req, res, next) => {
                     .json({ message: "Variante no encontrada con el código proporcionado" });
             }
 
-            return res.json({ product, variant: filteredVariant });
+            return res.json({ product, variant: filteredVariant }); // Devuelve producto y variante
         }
 
-        // Si se buscó por product_reference, devuelve todo el producto
-        return res.json(product);
+        return res.json(product); // Devuelve todo el producto si se busca por referencia
     } catch (error) {
-        console.error("Error en la búsqueda de producto:", error);
-        next(error);
+        console.error("Error en la búsqueda de producto:", error); // Registro de error
+        next(error); // Manejo de errores centralizado
     }
 };
 
+// Filtrar productos por nombre
 export const filterByName = async (req, res) => {
     try {
-        const search = req.params.name.replace(/%20/g, ' ') || ''; // Decodificar el nombre con espacios
+        const search = req.params.name.replace(/%20/g, ' ') || ''; // Decodifica el nombre desde los parámetros
         const query = search
-            ? { 'variants.name': { $regex: search, $options: 'i' } } // Insensible a mayúsculas
-            : {}; // Si no se pasa nombre, devuelve todos los productos
+            ? { 'variants.name': { $regex: search, $options: 'i' } } // Filtro de búsqueda insensible a mayúsculas
+            : {}; // Devuelve todos los productos si no hay búsqueda
 
-        const products = await Product.find(query).populate('variants');
+        const products = await Product.find(query).populate('variants'); // Busca productos y popula variantes
         res.json(products);
     } catch (error) {
         res.status(500).json({
-            message: 'Error al obtener los productos',
+            message: 'Error al obtener los productos', // Mensaje de error
             error: error.message,
         });
     }

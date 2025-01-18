@@ -10,20 +10,23 @@ connectDB();
 // Controlador para obtener todos los usuarios
 export const getUsers = async (req, res) => {
     try {
-        const users = await User.find({}, { password: 0 }); // Excluir campos sensibles
+        const users = await User.find({}, { password: 0 }); // Consultar usuarios excluyendo la contraseña
         if (users.length === 0) {
+            // Responder con un mensaje si no hay usuarios
             return res.status(404).json({
                 message: "No se encontraron usuarios",
                 success: false
             });
         }
 
+        // Responder con la lista de usuarios
         res.status(200).json({
             data: users,
             message: "Usuarios obtenidos exitosamente",
             success: true
         });
     } catch (error) {
+        // Manejo de errores
         console.error("Error al obtener los usuarios:", error);
         res.status(500).json({
             message: "Error en el servidor",
@@ -36,15 +39,17 @@ export const getUsers = async (req, res) => {
 // Controlador para registrar un usuario
 export const postUsers = async (req, res) => {
     try {
-        const { first_name, last_name, email, password } = req.body; // Cambiado aquí
+        const { first_name, last_name, email, password } = req.body; // Extraer datos del cuerpo de la solicitud
 
-        if (!first_name || !last_name || !email || !password) { // Cambiado aquí
+        // Validar que todos los campos requeridos estén presentes
+        if (!first_name || !last_name || !email || !password) {
             return res.status(400).json({
                 message: "Faltan campos obligatorios",
                 success: false
             });
         }
 
+        // Verificar si el usuario ya existe en la base de datos
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(409).json({
@@ -53,23 +58,27 @@ export const postUsers = async (req, res) => {
             });
         }
 
+        // Hash de la contraseña antes de guardarla
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Crear un nuevo usuario en la base de datos
         const newUser = new User({
-            first_name, // Asegúrate de que estás utilizando el nombre correcto
-            last_name,  // Añade también last_name aquí
+            first_name,
+            last_name,
             email,
             password: hashedPassword
         });
 
-        await newUser.save();
+        await newUser.save(); // Guardar el usuario en la base de datos
 
+        // Responder con los datos del nuevo usuario
         res.status(201).json({
             data: { id: newUser._id, first_name: newUser.first_name, last_name: newUser.last_name, email: newUser.email },
             message: "Usuario creado exitosamente",
             success: true
         });
     } catch (error) {
+        // Manejo de errores
         console.error("Error al crear el usuario:", error);
         res.status(500).json({
             message: "Error en el servidor",
@@ -80,10 +89,12 @@ export const postUsers = async (req, res) => {
 };
 
 
+// Controlador para iniciar sesión
 export const loginUser = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password } = req.body; // Extraer datos del cuerpo de la solicitud
 
+        // Validar que los campos email y password estén presentes
         if (!email || !password) {
             return res.status(400).json({
                 message: "Por favor, proporciona email y contraseña.",
@@ -91,6 +102,7 @@ export const loginUser = async (req, res) => {
             });
         }
 
+        // Verificar si el usuario existe en la base de datos
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({
@@ -99,6 +111,7 @@ export const loginUser = async (req, res) => {
             });
         }
 
+        // Comparar la contraseña ingresada con la almacenada
         const isPasswordCorrect = await bcrypt.compare(password, user.password);
         if (!isPasswordCorrect) {
             return res.status(401).json({
@@ -107,20 +120,23 @@ export const loginUser = async (req, res) => {
             });
         }
 
+        // Generar un token JWT con una duración de 2 horas
         const existingToken = jwt.sign(
             { email: user.email, id: user._id },
             JWT_SECRET,
             { expiresIn: '2h' }
         );
 
+        // Decodificar el token para verificar tiempo de expiración
         const decodedToken = jwt.decode(existingToken);
         const currentTime = Math.floor(Date.now() / 1000);
 
+        // Si el token está cerca de expirar, generar uno nuevo con tiempo extendido
         if (decodedToken.exp - currentTime < 300) {
             const refreshedToken = jwt.sign(
                 { email: user.email, id: user._id },
                 JWT_SECRET,
-                { expiresIn: '5m' } // Nuevo token con 5 minutos adicionales
+                { expiresIn: '5m' }
             );
             return res.status(200).json({
                 data: {
@@ -130,11 +146,11 @@ export const loginUser = async (req, res) => {
                 },
                 message: "Login correcto",
                 success: true,
-                token: refreshedToken,  // Enviar el token extendido
+                token: refreshedToken, // Enviar el token extendido
             });
         }
 
-        // Si el token no está cerca de expirar, se manda el token original
+        // Responder con el token original si no está cerca de expirar
         res.status(200).json({
             data: {
                 id: user._id,
@@ -143,9 +159,10 @@ export const loginUser = async (req, res) => {
             },
             message: "Login correcto",
             success: true,
-            token: existingToken,  // Enviar el token original
+            token: existingToken,
         });
     } catch (error) {
+        // Manejo de errores
         console.error("Error al iniciar sesión:", error);
         res.status(500).json({
             message: "Error en el servidor",
@@ -158,26 +175,33 @@ export const loginUser = async (req, res) => {
 
 // Controlador para obtener un usuario por ID
 export const getUserById = async (req, res) => {
+    // Obtener el token del encabezado de autorización
     const token = req.headers['authorization']?.split(' ')[1];
     if (!token) {
+        // Respuesta si no se proporciona un token
         return res.status(401).json({ message: 'Token no proporcionado', success: false });
     }
 
     try {
+        // Verificar el token para extraer el ID del usuario
         const decoded = jwt.verify(token, JWT_SECRET);
         const userId = decoded.id;
 
+        // Buscar el usuario en la base de datos, excluyendo la contraseña
         const user = await User.findById(userId, { password: 0 });
         if (!user) {
+            // Respuesta si no se encuentra el usuario
             return res.status(404).json({ message: 'Usuario no encontrado', success: false });
         }
 
+        // Respuesta exitosa con los datos del usuario
         return res.status(200).json({
             data: user,
             message: "Usuario obtenido correctamente",
             success: true
         });
     } catch (error) {
+        // Manejo de errores del servidor
         console.error("Error al obtener el usuario:", error);
         return res.status(500).json({
             message: 'Error en el servidor',
@@ -189,26 +213,33 @@ export const getUserById = async (req, res) => {
 
 // Controlador para obtener los detalles del usuario actual
 export const getMe = async (req, res) => {
+    // Obtener el token del encabezado de autorización
     const token = req.headers['authorization']?.split(' ')[1];
     if (!token) {
+        // Respuesta si no se proporciona un token
         return res.status(401).json({ message: 'Token no proporcionado', success: false });
     }
 
     try {
+        // Verificar el token para extraer el ID del usuario
         const decoded = jwt.verify(token, JWT_SECRET);
         const userId = decoded.id;
 
+        // Buscar el usuario en la base de datos, excluyendo la contraseña
         const user = await User.findById(userId, { password: 0 });
         if (!user) {
+            // Respuesta si no se encuentra el usuario
             return res.status(404).json({ message: 'Usuario no encontrado', success: false });
         }
 
+        // Respuesta exitosa con los datos del usuario actual
         return res.status(200).json({
             data: user,
             message: "Usuario actual obtenido correctamente",
             success: true
         });
     } catch (error) {
+        // Manejo de errores del servidor
         console.error('Error al obtener el usuario:', error);
         return res.status(500).json({
             message: 'Error en el servidor',
@@ -220,37 +251,42 @@ export const getMe = async (req, res) => {
 
 // Controlador para actualizar la información del usuario logueado
 export const updateUserById = async (req, res) => {
+    // Obtener el token del encabezado de autorización
     const token = req.headers['authorization']?.split(' ')[1];
     if (!token) {
+        // Respuesta si no se proporciona un token
         return res.status(401).json({ message: 'Token no proporcionado', success: false });
     }
 
     try {
+        // Verificar el token para extraer el ID del usuario
         const decoded = jwt.verify(token, JWT_SECRET);
         const userId = decoded.id;
 
-        const { first_name, gender, country, phone_number, last_name, email, password, contact_preferences, birth_date, postal_code, location} = req.body;
+        // Extraer los datos del cuerpo de la solicitud
+        const { first_name, gender, country, phone_number, last_name, email, password, contact_preferences, birth_date, postal_code, location } = req.body;
 
-        // Validación de datos
-        if (!first_name && !last_name && !email && !password && location) {
+        // Validar que se proporcionen datos para actualizar
+        if (!first_name && !last_name && !email && !password && !location) {
             return res.status(400).json({ message: 'No se proporcionaron campos para actualizar', success: false });
         }
 
-        // Crear objeto con los campos a actualizar
+        // Crear un objeto con los campos que se actualizarán
         const updateFields = {};
         if (first_name) updateFields.first_name = first_name;
         if (last_name) updateFields.last_name = last_name;
         if (email) updateFields.email = email;
         if (password) {
+            // Hash de la nueva contraseña antes de guardarla
             const hashedPassword = await bcrypt.hash(password, 10);
             updateFields.password = hashedPassword;
         }
-        if (postal_code) updateFields.postal_code = postal_code
+        if (postal_code) updateFields.postal_code = postal_code;
         if (gender) updateFields.gender = gender;
         if (phone_number) updateFields.phone_number = phone_number;
         if (country) updateFields.country = country;
         if (contact_preferences) {
-            // Asegúrate de que contact_preferences tenga una estructura de objeto
+            // Asegurarse de que contact_preferences tenga una estructura válida
             const { email, phone, whatsapp } = contact_preferences;
             updateFields.contact_preferences = {
                 email: Boolean(email),
@@ -259,27 +295,31 @@ export const updateUserById = async (req, res) => {
             };
         }
         if (birth_date && birth_date.day && birth_date.month !== undefined && birth_date.year) {
+            // Convertir la fecha a un objeto Date completo
             const completeDate = new Date(birth_date.year, birth_date.month, birth_date.day);
             updateFields.birth_date = completeDate;
         }
-
         if (location) {
+            // Actualizar la ubicación si se proporcionó
             updateFields.location = {};
             if (location.city) updateFields.location.city = location.city;
             if (location.street) updateFields.location.street = location.street;
             if (location.postal_code) updateFields.location.postal_code = location.postal_code;
         }
+
         // Actualizar el usuario en la base de datos
         const updatedUser = await User.findByIdAndUpdate(
             userId,
             { $set: updateFields },
-            { new: true, select: { password: 0 } } // Excluir el campo password en la respuesta
+            { new: true, select: { password: 0 } } // Excluir la contraseña en la respuesta
         );
 
         if (!updatedUser) {
+            // Respuesta si no se encuentra el usuario
             return res.status(404).json({ message: 'Usuario no encontrado', success: false });
         }
 
+        // Respuesta exitosa con los datos actualizados
         return res.status(200).json({
             data: updatedUser,
             message: 'Usuario actualizado exitosamente',
@@ -287,6 +327,7 @@ export const updateUserById = async (req, res) => {
         });
 
     } catch (error) {
+        // Manejo de errores del servidor
         console.error("Error al actualizar el usuario:", error);
         return res.status(500).json({
             message: 'Error en el servidor',
@@ -296,22 +337,29 @@ export const updateUserById = async (req, res) => {
     }
 };
 
+
+// Controlador para suscribir al usuario a la newsletter
 export const subscribeNewsletter = async (req, res) => {
+    // Obtener el token del encabezado de autorización
     const token = req.headers['authorization']?.split(' ')[1];
     if (!token) {
+        // Respuesta si no se proporciona un token
         return res.status(401).json({ message: 'Token no proporcionado', success: false });
     }
 
     try {
+        // Verificar el token para extraer el ID del usuario
         const decoded = jwt.verify(token, JWT_SECRET);
         const userId = decoded.id;
 
+        // Buscar el usuario en la base de datos
         const user = await User.findById(userId);
         if (!user) {
+            // Respuesta si no se encuentra el usuario
             return res.status(404).json({ message: 'Usuario no encontrado', success: false });
         }
 
-        // Verificar si el email coincide con el del usuario logueado
+        // Validar que el email proporcionado coincida con el del usuario logueado
         const { email } = req.body;
         if (email.toLowerCase().trim() !== user.email.toLowerCase().trim()) {
             return res.status(400).json({
@@ -320,11 +368,12 @@ export const subscribeNewsletter = async (req, res) => {
             });
         }
 
-        // Actualizar la suscripción
+        // Actualizar la suscripción a la newsletter
         user.newsletter.subscribed = true;
         user.newsletter.subscription_date = new Date();
         await user.save();
 
+        // Respuesta exitosa con los datos de suscripción
         return res.status(200).json({
             data: { email: user.email, subscribed: user.newsletter.subscribed },
             message: "Usuario suscrito exitosamente a la newsletter",
@@ -332,6 +381,7 @@ export const subscribeNewsletter = async (req, res) => {
         });
 
     } catch (error) {
+        // Manejo de errores del servidor
         console.error("Error al suscribir a la newsletter:", error);
         return res.status(500).json({
             message: 'Error en el servidor',
