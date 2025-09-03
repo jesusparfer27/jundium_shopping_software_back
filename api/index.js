@@ -10,7 +10,7 @@ const app = express();
 
 // Define __dirname para usar rutas absolutas en ES Modules.
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename); 
+const __dirname = path.dirname(__filename);
 
 // Crea el directorio de imágenes si no existe.
 const uploadDir = path.resolve(__dirname, '../public/images'); 
